@@ -354,59 +354,179 @@ public class ISLUStudentPortal extends JFrame {
 
     // Method for the "Grade" sub-panels
     private JPanel createGradesPanel(MySinglyLinkedList<String> subItems) {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(Color.WHITE);
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(Color.WHITE);
 
-        JLabel titleLabel = new JLabel(subItems.toString(), SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        // Header with semester info
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(new Color(52, 73, 94)); // Dark blue background
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        
+        JLabel titleLabel = new JLabel("📊 Grades (FIRST SEMESTER, 2025-2026)");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setIcon(null); // Remove any existing icon
+        
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+        
+        // Table with exact columns from image
+        String[] columnNames = {"Class Code", "Course Number", "Units", "Prelim Grade", "Midterm Grade", "Tentative Final Grade", "Final Grade", "Weights"};
 
-        // Convert the LinkedList to a String array for JTable column headers
-        String[] columnNames ={"Subject", "Prelim Grade", "Midterm Grade","Tentative Final Grade","Final Grade"};
-
-        // Create an empty data array
-        Object[][] data = new Object[0][columnNames.length];
-
-        DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
+        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false; // Make all cells non-editable
             }
         };
+        
         JTable table = new JTable(tableModel);
-        table.setPreferredSize(new Dimension(500, 300));
-        table.setFillsViewportHeight(true);
-        table.getTableHeader().setReorderingAllowed(false); // Disable column reordering
-        table.setAutoCreateRowSorter(false); // Disable sorting
-
-        // Populate the table with dummy data and calculate the final grade
-        // Note: The grades are now stored as numbers for calculation
-        Object[] grades1 = {"Intro to Programming", 90, 92, 91};
-        Object[] grades2 = {"Data Structures", 85, 88, 87};
-        Object[] grades3 = {"Algorithms", 95, 96, 95};
-
-        // Calculate the average for each set of grades
-        double average1 = (double) ((int) grades1[1] + (int) grades1[2] + (int) grades1[3]) / 3.0;
-        double average2 = (double) ((int) grades2[1] + (int) grades2[2] + (int) grades2[3]) / 3.0;
-        double average3 = (double) ((int) grades3[1] + (int) grades3[2] + (int) grades3[3]) / 3.0;
-
-        // Add the calculated average to the end of each grades array
-        // You can format the average to two decimal places
-        grades1 = new Object[] {grades1[0], grades1[1], grades1[2], grades1[3], String.format("%.2f", average1)};
-        grades2 = new Object[] {grades2[0], grades1[1], grades2[2], grades2[3], String.format("%.2f", average2)};
-        grades3 = new Object[] {grades3[0], grades3[1], grades3[2], grades3[3], String.format("%.2f", average3)};
-
-        tableModel.addRow(grades1);
-        tableModel.addRow(grades2);
-        tableModel.addRow(grades3);
-
+        table.setFont(new Font("Arial", Font.PLAIN, 12));
+        table.setRowHeight(25);
+        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
+        table.getTableHeader().setBackground(new Color(240, 240, 240));
+        table.getTableHeader().setReorderingAllowed(false);
+        table.setAutoCreateRowSorter(false);
+        table.setGridColor(new Color(220, 220, 220));
+        
+        // Add the exact data from the image
+        tableModel.addRow(new Object[]{"7024", "NCTP-CWTS 1", "3", "", "", "", "Not Yet Submitted", ""});
+        tableModel.addRow(new Object[]{"9454", "GSTS", "3", "", "", "", "Not Yet Submitted", ""});
+        tableModel.addRow(new Object[]{"9465", "GEN1", "3", "", "", "", "Not Yet Submitted", ""});
+        tableModel.addRow(new Object[]{"9458", "LYE 103", "3", "", "", "", "Not Yet Submitted", ""});
+        tableModel.addRow(new Object[]{"9457", "IT 211", "3", "", "", "", "Not Yet Submitted", ""});
+        tableModel.addRow(new Object[]{"9458A", "IT 212", "2", "", "", "", "Not Yet Submitted", ""});
+        tableModel.addRow(new Object[]{"9458B", "IT 212L", "1", "", "", "", "Not Yet Submitted", ""});
+        tableModel.addRow(new Object[]{"9459A", "IT 213", "2", "", "", "", "Not Yet Submitted", ""});
+        tableModel.addRow(new Object[]{"9459B", "IT 213L", "1", "", "", "", "Not Yet Submitted", ""});
+        tableModel.addRow(new Object[]{"9547", "FIT OA", "1", "", "", "", "Not Yet Submitted", ""});
+        
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder(5, 20, 0, 20));
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
+        scrollPane.setBackground(Color.WHITE);
+        
+        // Deadline note section
+        JPanel notePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        notePanel.setBackground(Color.WHITE);
+        notePanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 5, 15));
+        
+        JLabel noteLabel = new JLabel("<html><b>NOTE:</b> Deadline of submission for completion of Students is <b>February 04, 2026</b>. NC due to NFE/INC if not completed, the final grades shall become permanent.</html>");
+        noteLabel.setFont(new Font("Arial", Font.PLAIN, 11));
+        noteLabel.setForeground(new Color(200, 0, 0)); // Red color for note
+        notePanel.add(noteLabel);
+        
+        // Legend section
+        JPanel legendPanel = new JPanel();
+        legendPanel.setLayout(new BoxLayout(legendPanel, BoxLayout.Y_AXIS));
+        legendPanel.setBackground(Color.WHITE);
+        legendPanel.setBorder(BorderFactory.createEmptyBorder(5, 15, 15, 15));
+        
+        JLabel legendTitle = new JLabel("LEGEND:");
+        legendTitle.setFont(new Font("Arial", Font.BOLD, 12));
+        legendPanel.add(legendTitle);
+        
+        // Create legend items in columns as shown in image
+        JPanel legendContent = new JPanel(new GridLayout(0, 2, 20, 2));
+        legendContent.setBackground(Color.WHITE);
+        
+        // Left column
+        JPanel leftColumn = new JPanel();
+        leftColumn.setLayout(new BoxLayout(leftColumn, BoxLayout.Y_AXIS));
+        leftColumn.setBackground(Color.WHITE);
+        
+        leftColumn.add(createLegendItem("P", "Passed", "HP", "High Pass"));
+        leftColumn.add(createLegendItem("INC", "Incomplete", "WP", "Withdrawal w/ Permission"));
+        leftColumn.add(createLegendItem("D", "Dropped", "F", "Failure"));
+        leftColumn.add(createLegendItem("NC", "No Credit", "NFE", "No Final Examination"));
+        
+        JLabel undergrad = new JLabel("FOR UNDERGRADUATE");
+        undergrad.setFont(new Font("Arial", Font.BOLD, 11));
+        leftColumn.add(undergrad);
+        
+        leftColumn.add(createLegendItem("Passing Grade", "75%"));
+        leftColumn.add(createLegendItem("Failure", "Below 75%"));
+        
+        // Right column
+        JPanel rightColumn = new JPanel();
+        rightColumn.setLayout(new BoxLayout(rightColumn, BoxLayout.Y_AXIS));
+        rightColumn.setBackground(Color.WHITE);
+        
+        JLabel gradSchool = new JLabel("FOR GRADUATE SCHOOL");
+        gradSchool.setFont(new Font("Arial", Font.BOLD, 11));
+        rightColumn.add(gradSchool);
+        
+        rightColumn.add(createLegendItem("Passing Grade", "85%"));
+        rightColumn.add(createLegendItem("Failure", "Below 85%"));
+        
+        legendContent.add(leftColumn);
+        legendContent.add(rightColumn);
+        legendPanel.add(legendContent);
+        
+        // Assemble the main panel
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+        
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setBackground(Color.WHITE);
+        bottomPanel.add(notePanel, BorderLayout.NORTH);
+        bottomPanel.add(legendPanel, BorderLayout.CENTER);
+        
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
-        panel.add(titleLabel, BorderLayout.NORTH);
-        panel.add(scrollPane, BorderLayout.CENTER);
-
-        return panel;
+        return mainPanel;
+    }
+    
+    // Helper method to create legend items
+    private JPanel createLegendItem(String abbrev, String meaning) {
+        JPanel item = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        item.setBackground(Color.WHITE);
+        
+        JLabel abbrevLabel = new JLabel(abbrev);
+        abbrevLabel.setFont(new Font("Arial", Font.BOLD, 11));
+        
+        JLabel dots = new JLabel("........... ");
+        dots.setFont(new Font("Arial", Font.PLAIN, 11));
+        
+        JLabel meaningLabel = new JLabel(meaning);
+        meaningLabel.setFont(new Font("Arial", Font.PLAIN, 11));
+        
+        item.add(abbrevLabel);
+        item.add(dots);
+        item.add(meaningLabel);
+        
+        return item;
+    }
+    
+    // Overloaded helper method for legend items with two abbreviations
+    private JPanel createLegendItem(String abbrev1, String meaning1, String abbrev2, String meaning2) {
+        JPanel item = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        item.setBackground(Color.WHITE);
+        
+        JLabel abbrevLabel1 = new JLabel(abbrev1);
+        abbrevLabel1.setFont(new Font("Arial", Font.BOLD, 11));
+        
+        JLabel dots1 = new JLabel("........... ");
+        dots1.setFont(new Font("Arial", Font.PLAIN, 11));
+        
+        JLabel meaningLabel1 = new JLabel(meaning1 + "    ");
+        meaningLabel1.setFont(new Font("Arial", Font.PLAIN, 11));
+        
+        JLabel abbrevLabel2 = new JLabel(abbrev2);
+        abbrevLabel2.setFont(new Font("Arial", Font.BOLD, 11));
+        
+        JLabel dots2 = new JLabel("........... ");
+        dots2.setFont(new Font("Arial", Font.PLAIN, 11));
+        
+        JLabel meaningLabel2 = new JLabel(meaning2);
+        meaningLabel2.setFont(new Font("Arial", Font.PLAIN, 11));
+        
+        item.add(abbrevLabel1);
+        item.add(dots1);
+        item.add(meaningLabel1);
+        item.add(abbrevLabel2);
+        item.add(dots2);
+        item.add(meaningLabel2);
+        
+        return item;
     }
 
     // Method for the Announcements sub-panels
