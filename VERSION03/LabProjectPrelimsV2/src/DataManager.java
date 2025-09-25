@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.*;
+import java.time.LocalDate;
 import java.net.URL;
 import java.net.URISyntaxException;
 
@@ -13,6 +14,7 @@ public class DataManager {
     private static final String DATABASE_FILE = "Database.txt";
     private static final String USER_PASSWORD_FILE = "UserPasswordID.txt";
     private static final String PAYMENT_LOGS_FILE = "paymentLogs.txt";
+    private static final String ATTENDANCE_FILE = "attendanceRecords.txt";
     
     /**
      * Resolve a data file by searching from the working directory and then walking up
@@ -49,6 +51,7 @@ public class DataManager {
     private static File getDatabaseFile() { return resolveFile(DATABASE_FILE); }
     private static File getUserPasswordFile() { return resolveFile(USER_PASSWORD_FILE); }
     private static File getPaymentLogsFile() { return resolveFile(PAYMENT_LOGS_FILE); }
+    private static File getAttendanceFile() { return resolveFile(ATTENDANCE_FILE); }
 
     public static boolean databaseExists() {
         return getDatabaseFile().exists();
@@ -274,6 +277,126 @@ public class DataManager {
         return transactions;
     }
     
+    /**
+     * Loads attendance records for a specific student from attendanceRecords.txt
+     * Only real data lines are parsed; comment/header lines are skipped.
+     */
+    public static List<AttendanceRecord> loadAttendanceRecords(String studentID) {
+        List<AttendanceRecord> records = new ArrayList<>();
+        try {
+            File attendanceFile = getAttendanceFile();
+            if (!attendanceFile.exists()) {
+                return records;
+            }
+            try (BufferedReader reader = new BufferedReader(new FileReader(attendanceFile))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String trimmed = line.trim();
+                    if (trimmed.isEmpty() || trimmed.startsWith("===") || trimmed.startsWith("Format:")) {
+                        continue;
+                    }
+                    AttendanceRecord rec = AttendanceRecord.fromCsvFormat(trimmed);
+                    if (rec != null && studentID.equals(rec.getStudentID())) {
+                        records.add(rec);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading attendance records: " + e.getMessage());
+        }
+        return records;
+    }
+
+    /**
+     * Updates/sets a reason (remarks) for a specific student's attendance record date.
+     * Returns true if the file was updated.
+     */
+    public static boolean updateAttendanceReason(String studentID, String subjectCode, LocalDate date, String reason) {
+        boolean updated = false;
+        try {
+            File attendanceFile = getAttendanceFile();
+            if (!attendanceFile.exists()) {
+                return false;
+            }
+
+            java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy");
+            String targetDate = date.format(fmt);
+
+            List<String> lines = new ArrayList<>();
+            try (BufferedReader reader = new BufferedReader(new FileReader(attendanceFile))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String trimmed = line.trim();
+                    if (trimmed.isEmpty() || trimmed.startsWith("===") || trimmed.startsWith("Format:")) {
+                        lines.add(line);
+                        continue;
+                    }
+                    String[] parts = trimmed.split(",");
+                    if (parts.length >= 5 && parts[0].equals(studentID) && parts[1].equals(subjectCode) && parts[3].equals(targetDate)) {
+                        // Ensure array has 6 items (remarks at index 5)
+                        String status = parts[4];
+                        String remarks = reason == null ? "" : reason;
+                        String rebuilt = parts[0] + "," + parts[1] + "," + parts[2] + "," + parts[3] + "," + status + "," + remarks;
+                        lines.add(rebuilt);
+                        updated = true;
+                    } else {
+                        lines.add(line);
+                    }
+                }
+            }
+
+            if (updated) {
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(attendanceFile))) {
+                    for (String l : lines) {
+                        writer.write(l);
+                        writer.newLine();
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error updating attendance reason: " + e.getMessage());
+            return false;
+        }
+        return updated;
+    }
+
+    /**
+     * FACULTY BACKEND PLACEHOLDER
+     * This method is intended to be called from the Faculty portal to mark
+     * attendance (Present/Absent/Late) for a student. For now, we keep a minimal
+     * implementation that simply appends a line to attendanceRecords.txt so the
+     * student UI can be tested. When the Faculty portal is implemented, replace
+     * this body with the real logic (roster validation, duplicate prevention, etc.).
+     */
+    public static boolean updateAttendanceRecord(String studentID, String subjectCode,
+                                                 String subjectName, LocalDate date,
+                                                 String status, String remarks) {
+        // TODO(FACULTY): Replace this stub with your real implementation.
+        try {
+            File attendanceFile = getAttendanceFile();
+            if (!attendanceFile.exists()) {
+                // Create file with a simple header if it does not exist
+                try (BufferedWriter w = new BufferedWriter(new FileWriter(attendanceFile))) {
+                    w.write("=== ATTENDANCE RECORDS ===");
+                    w.newLine();
+                    w.write("Format: StudentID,SubjectCode,SubjectName,Date,Status,Remarks");
+                    w.newLine();
+                }
+            }
+
+            java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy");
+            String line = studentID + "," + subjectCode + "," + subjectName + "," + date.format(fmt) + "," + status + "," + (remarks == null ? "" : remarks);
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(attendanceFile, true))) {
+                writer.write(line);
+                writer.newLine();
+            }
+            return true;
+        } catch (IOException e) {
+            System.err.println("Error writing attendance record: " + e.getMessage());
+            return false;
+        }
+    }
+
     /**
      * Gets all students from the database
      * @return List of all student information
