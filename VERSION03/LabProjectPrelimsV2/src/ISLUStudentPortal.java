@@ -621,43 +621,83 @@ public class ISLUStudentPortal extends JFrame {
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(new Color(240, 240, 240));
         
-        // Create main content panel
-        JPanel contentPanel = new JPanel(new BorderLayout());
+        // Create main content panel with vertical layout for stacked tables
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBackground(Color.WHITE);
         contentPanel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(200, 200, 200)),
             BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
         
-        // Header panel with title
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(new Color(13, 37, 73));
-        headerPanel.setPreferredSize(new Dimension(0, 50));
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        // CLASS SCHEDULE Section
+        JPanel classScheduleSection = createClassScheduleSection();
+        contentPanel.add(classScheduleSection);
         
-        JLabel titleLabel = new JLabel("📅 CLASS SCHEDULE");
-        titleLabel.setForeground(Color.WHITE);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        headerPanel.add(titleLabel, BorderLayout.WEST);
+        // Add spacing between sections
+        contentPanel.add(Box.createVerticalStrut(20));
         
-        contentPanel.add(headerPanel, BorderLayout.NORTH);
+        // WEEKLY VIEW Section
+        JPanel weeklyViewSection = createWeeklyViewSection();
+        contentPanel.add(weeklyViewSection);
         
-        // Create tabbed pane for class schedule and weekly view
-        JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.setBackground(Color.WHITE);
+        // Wrap in scroll pane for better usability
+        JScrollPane scrollPane = new JScrollPane(contentPanel);
+        scrollPane.setBorder(null);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         
-        // Class Schedule Table Tab
-        JPanel classSchedulePanel = createClassScheduleTable();
-        tabbedPane.addTab("Class Schedule", classSchedulePanel);
-        
-        // Weekly View Tab
-        JPanel weeklyViewPanel = createWeeklyViewTable();
-        tabbedPane.addTab("Weekly View", weeklyViewPanel);
-        
-        contentPanel.add(tabbedPane, BorderLayout.CENTER);
-        mainPanel.add(contentPanel, BorderLayout.CENTER);
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
         
         return mainPanel;
+    }
+    
+    private JPanel createClassScheduleSection() {
+        JPanel section = new JPanel(new BorderLayout());
+        section.setBackground(Color.WHITE);
+        
+        // CLASS SCHEDULE Header
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(new Color(13, 37, 73));
+        headerPanel.setPreferredSize(new Dimension(0, 40));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        
+        JLabel titleLabel = new JLabel("CLASS SCHEDULE");
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+        
+        section.add(headerPanel, BorderLayout.NORTH);
+        
+        // Class Schedule Table
+        JPanel tablePanel = createClassScheduleTable();
+        section.add(tablePanel, BorderLayout.CENTER);
+        
+        return section;
+    }
+    
+    private JPanel createWeeklyViewSection() {
+        JPanel section = new JPanel(new BorderLayout());
+        section.setBackground(Color.WHITE);
+        
+        // WEEKLY VIEW Header
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(new Color(13, 37, 73));
+        headerPanel.setPreferredSize(new Dimension(0, 40));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        
+        JLabel titleLabel = new JLabel("WEEKLY VIEW");
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+        
+        section.add(headerPanel, BorderLayout.NORTH);
+        
+        // Weekly View Table
+        JPanel tablePanel = createWeeklyViewTable();
+        section.add(tablePanel, BorderLayout.CENTER);
+        
+        return section;
     }
     
     private JPanel createClassScheduleTable() {
