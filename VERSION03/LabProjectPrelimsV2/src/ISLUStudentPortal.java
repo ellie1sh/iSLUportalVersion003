@@ -520,6 +520,10 @@ public class ISLUStudentPortal extends JFrame {
         contentPanel.removeAll();
         switch (item.getName()) {
             case "🏠 Home":
+                // Restore Home's original two-column layout and styling
+                contentPanel.setLayout(new GridLayout(1, 2, 10, 10));
+                contentPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+                contentPanel.setBackground(Color.WHITE);
                 setupLayout(item.getSubItems());
                 break;
             case "📚 Journal/Periodical":
@@ -1506,9 +1510,14 @@ public class ISLUStudentPortal extends JFrame {
     
     // Navigate to home content
     private void showHomeContent() {
-        // TODO: Implement navigation back to home
-        // This should reset the sidebar selection and show the home content
-        // You can implement this based on your existing navigation logic
+        // Reset content panel to Home's original layout and repopulate
+        contentPanel.removeAll();
+        contentPanel.setLayout(new GridLayout(1, 2, 10, 10));
+        contentPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        contentPanel.setBackground(Color.WHITE);
+        setupLayout(PortalUtils.createHomeSublist());
+        contentPanel.revalidate();
+        contentPanel.repaint();
     }
     
     // method for Personal Details Content
