@@ -4,7 +4,7 @@
  * SUBJECT: DATA STRUCTURE IT212 9458
  */
 
-public class MySinglyLinkedList<T> {
+public class MySinglyLinkedList<T> implements Iterable<T> {
     private Node<T> head;
     private int size;
 
@@ -71,6 +71,26 @@ public class MySinglyLinkedList<T> {
         return size;
     }
 
+	public boolean isEmpty() {
+		return size == 0;
+	}
+
+	public void clear() {
+		head = null;
+		size = 0;
+	}
+
+	public boolean contains(T data) {
+		Node<T> current = head;
+		while (current != null) {
+			if (java.util.Objects.equals(current.getData(), data)) {
+				return true;
+			}
+			current = current.getNext();
+		}
+		return false;
+	}
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -84,6 +104,35 @@ public class MySinglyLinkedList<T> {
         }
         return sb.toString();
     }
+
+	@Override
+	public java.util.Iterator<T> iterator() {
+		return new SinglyIterator();
+	}
+
+	private class SinglyIterator implements java.util.Iterator<T> {
+		private Node<T> current = head;
+
+		@Override
+		public boolean hasNext() {
+			return current != null;
+		}
+
+		@Override
+		public T next() {
+			if (!hasNext()) {
+				throw new java.util.NoSuchElementException();
+			}
+			T data = current.getData();
+			current = current.getNext();
+			return data;
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException("Remove operation not supported");
+		}
+	}
 
 
 }
