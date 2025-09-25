@@ -28,6 +28,9 @@ public class ISLUStudentPortal extends JFrame {
     private JPanel mainCardHolder;
     private CardLayout mainCardLayout;
     private MyDoublyLinkedList<MenuItem> menu;
+    // Holds the main profile content area and persistent left sidebar when viewing Personal Details
+    private JPanel profileMainContentPanel;
+    private JPanel profileLeftPanel;
 
     // Student data
     private String studentID;
@@ -1561,16 +1564,16 @@ public class ISLUStudentPortal extends JFrame {
         profilePanel.add(headerPanel, BorderLayout.NORTH);
         
         // Main content area with two columns
-        JPanel mainContentPanel = new JPanel(new BorderLayout());
-        mainContentPanel.setBackground(Color.WHITE);
-        mainContentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        profileMainContentPanel = new JPanel(new BorderLayout());
+        profileMainContentPanel.setBackground(Color.WHITE);
+        profileMainContentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
         // Left side - Profile picture and action buttons (Sidebar Panel)
-        JPanel leftPanel = new JPanel();
-        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
-        leftPanel.setBackground(new Color(248, 248, 248)); // Light gray background to match image
-        leftPanel.setPreferredSize(new Dimension(200, 0));
-        leftPanel.setBorder(BorderFactory.createCompoundBorder(
+        profileLeftPanel = new JPanel();
+        profileLeftPanel.setLayout(new BoxLayout(profileLeftPanel, BoxLayout.Y_AXIS));
+        profileLeftPanel.setBackground(new Color(248, 248, 248));
+        profileLeftPanel.setPreferredSize(new Dimension(200, 0));
+        profileLeftPanel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
             BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
@@ -1584,9 +1587,9 @@ public class ISLUStudentPortal extends JFrame {
         profilePicture.setMaximumSize(new Dimension(140, 140));
         profilePicture.setMinimumSize(new Dimension(140, 140));
         
-        leftPanel.add(Box.createVerticalStrut(10));
-        leftPanel.add(profilePicture);
-        leftPanel.add(Box.createVerticalStrut(25));
+        profileLeftPanel.add(Box.createVerticalStrut(10));
+        profileLeftPanel.add(profilePicture);
+        profileLeftPanel.add(Box.createVerticalStrut(25));
         
         // Action buttons - styled to match the design with icons
         JButton personalDetailsBtn = createSidebarButton("📋 Personal Details");
@@ -1633,12 +1636,12 @@ public class ISLUStudentPortal extends JFrame {
             showPasswordChangeInRightPanel();
         });
         
-        leftPanel.add(personalDetailsBtn);
-        leftPanel.add(Box.createVerticalStrut(10));
-        leftPanel.add(accountInfoBtn);
-        leftPanel.add(Box.createVerticalStrut(10));
-        leftPanel.add(changePasswordBtn);
-        leftPanel.add(Box.createVerticalGlue());
+        profileLeftPanel.add(personalDetailsBtn);
+        profileLeftPanel.add(Box.createVerticalStrut(10));
+        profileLeftPanel.add(accountInfoBtn);
+        profileLeftPanel.add(Box.createVerticalStrut(10));
+        profileLeftPanel.add(changePasswordBtn);
+        profileLeftPanel.add(Box.createVerticalGlue());
         
         // Set Personal Details as the default selected button
         personalDetailsBtn.setBackground(new Color(13, 37, 73));
@@ -1648,14 +1651,14 @@ public class ISLUStudentPortal extends JFrame {
             BorderFactory.createEmptyBorder(6, 10, 6, 10)
         ));
         
-        mainContentPanel.add(leftPanel, BorderLayout.WEST);
+        profileMainContentPanel.add(profileLeftPanel, BorderLayout.WEST);
         
         // Show Personal Details by default
         SwingUtilities.invokeLater(() -> {
             showPersonalDetailsInRightPanel();
         });
         
-        profilePanel.add(mainContentPanel, BorderLayout.CENTER);
+        profilePanel.add(profileMainContentPanel, BorderLayout.CENTER);
         contentPanel.add(profilePanel, BorderLayout.CENTER);
         
         contentPanel.revalidate();
@@ -1808,8 +1811,8 @@ public class ISLUStudentPortal extends JFrame {
      * Shows the Account Information in the right panel
      */
     private void showAccountInfo() {
-        // Find the main content panel and update only the right side
-        JPanel mainContentPanel = (JPanel) contentPanel.getComponent(0);
+        // Ensure we update only the right side of the persistent profile layout
+        JPanel mainContentPanel = profileMainContentPanel != null ? profileMainContentPanel : (JPanel) contentPanel.getComponent(0);
         
         // Remove existing right panel if it exists
         if (mainContentPanel.getComponentCount() > 1) {
@@ -1871,7 +1874,7 @@ public class ISLUStudentPortal extends JFrame {
      */
     private void showPasswordChangeInRightPanel() {
         // Find the main content panel and update only the right side
-        JPanel mainContentPanel = (JPanel) contentPanel.getComponent(0);
+        JPanel mainContentPanel = profileMainContentPanel != null ? profileMainContentPanel : (JPanel) contentPanel.getComponent(0);
         
         // Remove existing right panel if it exists
         if (mainContentPanel.getComponentCount() > 1) {
@@ -2090,7 +2093,7 @@ public class ISLUStudentPortal extends JFrame {
      */
     private void showPersonalDetailsInRightPanel() {
         // Find the main content panel and update only the right side
-        JPanel mainContentPanel = (JPanel) contentPanel.getComponent(0);
+        JPanel mainContentPanel = profileMainContentPanel != null ? profileMainContentPanel : (JPanel) contentPanel.getComponent(0);
         
         // Remove existing right panel if it exists
         if (mainContentPanel.getComponentCount() > 1) {
