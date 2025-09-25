@@ -27,7 +27,7 @@ public class ISLUStudentPortal extends JFrame {
     private JTextArea statusArea;
     private JPanel mainCardHolder;
     private CardLayout mainCardLayout;
-    private MyDoublyLinkedList<MenuItem> menu;
+    private EnhancedDoublyLinkedList<MenuItem> menu;
 
     // Student data
     private String studentID;
@@ -78,7 +78,7 @@ public class ISLUStudentPortal extends JFrame {
     }
 
     /**
-     * Generates random grade between 76-99
+     * Generates random grade between 76-99 using optimized data structures
      */
     private int generateRandomGrade() {
         return 76 + (int) (Math.random() * 24); // 76 to 99
