@@ -271,70 +271,62 @@ public class reqAcc extends JFrame {
         
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         
-        // Content Panel
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        contentPanel.setBackground(Color.WHITE);
-        
-        // Student Info Panel
-        JPanel studentInfoPanel = new JPanel();
-        studentInfoPanel.setLayout(new BoxLayout(studentInfoPanel, BoxLayout.Y_AXIS));
-        studentInfoPanel.setBackground(Color.WHITE);
-        studentInfoPanel.setBorder(BorderFactory.createTitledBorder("Student Information"));
-        
-        JLabel studentLabel = new JLabel("Student: " + studentName + " (ID: " + studentID + ")");
-        studentLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        studentInfoPanel.add(studentLabel);
-        
-        contentPanel.add(studentInfoPanel);
-        contentPanel.add(Box.createVerticalStrut(20));
-        
-        // General Information Panel
-        JPanel generalPanel = createGeneralInformationPanel();
-        contentPanel.add(generalPanel);
-        contentPanel.add(Box.createVerticalStrut(20));
-        
-        // Contact Information Panel
-        JPanel contactPanel = createContactInformationPanel();
-        contentPanel.add(contactPanel);
-        contentPanel.add(Box.createVerticalStrut(20));
-        
-        // Contact Persons Panel
-        JPanel contactPersonsPanel = createContactPersonsPanel();
-        contentPanel.add(contactPersonsPanel);
-        contentPanel.add(Box.createVerticalStrut(20));
-        
-        // Buttons Panel
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        buttonPanel.setBackground(Color.WHITE);
-        
-        JButton saveButton = new JButton("Save Profile");
-        saveButton.setBackground(new Color(70, 130, 180));
-        saveButton.setForeground(Color.WHITE);
-        saveButton.setFont(new Font("Arial", Font.BOLD, 14));
-        saveButton.setPreferredSize(new Dimension(120, 40));
-        saveButton.addActionListener(e -> saveProfile(profileFrame, studentID, studentName));
-        
-        JButton cancelButton = new JButton("Cancel");
-        cancelButton.setBackground(new Color(220, 220, 220));
-        cancelButton.setForeground(Color.BLACK);
-        cancelButton.setFont(new Font("Arial", Font.BOLD, 14));
-        cancelButton.setPreferredSize(new Dimension(120, 40));
-        cancelButton.addActionListener(e -> profileFrame.dispose());
-        
-        buttonPanel.add(saveButton);
-        buttonPanel.add(Box.createHorizontalStrut(10));
-        buttonPanel.add(cancelButton);
-        
-        contentPanel.add(buttonPanel);
-        
-        JScrollPane scrollPane = new JScrollPane(contentPanel);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        
-        mainPanel.add(scrollPane, BorderLayout.CENTER);
-        
+        // ==== Sidebar with avatar and navigation buttons ====
+        JPanel sidebarPanel = new JPanel();
+        sidebarPanel.setLayout(new BoxLayout(sidebarPanel, BoxLayout.Y_AXIS));
+        sidebarPanel.setBackground(Color.WHITE);
+        sidebarPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        sidebarPanel.setPreferredSize(new Dimension(180, 0));
+
+        JLabel avatar = new JLabel("\uD83D\uDC64", SwingConstants.CENTER);
+        avatar.setFont(new Font("SansSerif", Font.PLAIN, 64));
+        avatar.setOpaque(true);
+        avatar.setBackground(new Color(245, 245, 245));
+        avatar.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
+        avatar.setAlignmentX(Component.CENTER_ALIGNMENT);
+        avatar.setPreferredSize(new Dimension(130, 130));
+        avatar.setMaximumSize(new Dimension(130, 130));
+        sidebarPanel.add(avatar);
+        sidebarPanel.add(Box.createVerticalStrut(10));
+
+        JButton btnPersonal = new JButton("Personal Details");
+        JButton btnAccount = new JButton("Account Info");
+        JButton btnPassword = new JButton("Change Password");
+
+        JButton[] navButtons = new JButton[]{btnPersonal, btnAccount, btnPassword};
+        for (JButton b : navButtons) {
+            b.setAlignmentX(Component.CENTER_ALIGNMENT);
+            b.setMaximumSize(new Dimension(160, 32));
+        }
+        sidebarPanel.add(btnPersonal);
+        sidebarPanel.add(Box.createVerticalStrut(6));
+        sidebarPanel.add(btnAccount);
+        sidebarPanel.add(Box.createVerticalStrut(6));
+        sidebarPanel.add(btnPassword);
+
+        // ==== Right content with cards ====
+        JPanel cards = new JPanel(new CardLayout());
+        cards.setBackground(Color.WHITE);
+
+        JScrollPane personalCard = buildPersonalDetailsCard(profileFrame, studentID, studentName);
+        JPanel accountCard = buildAccountInfoCard(studentID, studentName);
+        JPanel changePassCard = buildChangePasswordCard(profileFrame, studentID);
+
+        cards.add(personalCard, "personal");
+        cards.add(accountCard, "account");
+        cards.add(changePassCard, "password");
+
+        CardLayout cl = (CardLayout) cards.getLayout();
+        btnPersonal.addActionListener(e -> cl.show(cards, "personal"));
+        btnAccount.addActionListener(e -> cl.show(cards, "account"));
+        btnPassword.addActionListener(e -> cl.show(cards, "password"));
+
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.add(sidebarPanel, BorderLayout.WEST);
+        centerPanel.add(cards, BorderLayout.CENTER);
+
+        mainPanel.add(centerPanel, BorderLayout.CENTER);
+
         profileFrame.add(mainPanel);
         profileFrame.setVisible(true);
     }
@@ -636,6 +628,161 @@ public class reqAcc extends JFrame {
         guardianAddressPanel.add(guardianAddressField);
         panel.add(guardianAddressPanel);
         
+        return panel;
+    }
+    
+    // ==== Cards for sidebar navigation ====
+    private JScrollPane buildPersonalDetailsCard(JFrame profileFrame, String studentID, String studentName) {
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        contentPanel.setBackground(Color.WHITE);
+
+        JPanel studentInfoPanel = new JPanel();
+        studentInfoPanel.setLayout(new BoxLayout(studentInfoPanel, BoxLayout.Y_AXIS));
+        studentInfoPanel.setBackground(Color.WHITE);
+        studentInfoPanel.setBorder(BorderFactory.createTitledBorder("Student Information"));
+
+        JLabel studentLabel = new JLabel("Student: " + studentName + " (ID: " + studentID + ")");
+        studentLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        studentInfoPanel.add(studentLabel);
+
+        contentPanel.add(studentInfoPanel);
+        contentPanel.add(Box.createVerticalStrut(20));
+
+        JPanel generalPanel = createGeneralInformationPanel();
+        contentPanel.add(generalPanel);
+        contentPanel.add(Box.createVerticalStrut(20));
+
+        JPanel contactPanel = createContactInformationPanel();
+        contentPanel.add(contactPanel);
+        contentPanel.add(Box.createVerticalStrut(20));
+
+        JPanel contactPersonsPanel = createContactPersonsPanel();
+        contentPanel.add(contactPersonsPanel);
+        contentPanel.add(Box.createVerticalStrut(20));
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.setBackground(Color.WHITE);
+
+        JButton saveButton = new JButton("Save Profile");
+        saveButton.setBackground(new Color(70, 130, 180));
+        saveButton.setForeground(Color.WHITE);
+        saveButton.setFont(new Font("Arial", Font.BOLD, 14));
+        saveButton.setPreferredSize(new Dimension(120, 40));
+        saveButton.addActionListener(e -> saveProfile(profileFrame, studentID, studentName));
+
+        JButton cancelButton = new JButton("Cancel");
+        cancelButton.setBackground(new Color(220, 220, 220));
+        cancelButton.setForeground(Color.BLACK);
+        cancelButton.setFont(new Font("Arial", Font.BOLD, 14));
+        cancelButton.setPreferredSize(new Dimension(120, 40));
+        cancelButton.addActionListener(e -> profileFrame.dispose());
+
+        buttonPanel.add(saveButton);
+        buttonPanel.add(Box.createHorizontalStrut(10));
+        buttonPanel.add(cancelButton);
+
+        contentPanel.add(buttonPanel);
+
+        JScrollPane scrollPane = new JScrollPane(contentPanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        return scrollPane;
+    }
+
+    private JPanel buildAccountInfoCard(String studentID, String studentName) {
+        JPanel wrapper = new JPanel();
+        wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
+        wrapper.setBackground(Color.WHITE);
+        wrapper.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        JPanel infoPanel = new JPanel(new GridLayout(0, 2, 10, 8));
+        infoPanel.setBackground(Color.WHITE);
+        infoPanel.setBorder(BorderFactory.createTitledBorder("ACCOUNT INFORMATION"));
+
+        infoPanel.add(new JLabel("User ID/Login ID:"));
+        infoPanel.add(new JLabel(studentID));
+
+        infoPanel.add(new JLabel("Account Name:"));
+        infoPanel.add(new JLabel(studentName));
+
+        java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("MMMM dd, yyyy");
+        infoPanel.add(new JLabel("Date Registered:"));
+        infoPanel.add(new JLabel(df.format(new java.util.Date())));
+
+        infoPanel.add(new JLabel("Account Type:"));
+        infoPanel.add(new JLabel("Student"));
+
+        wrapper.add(infoPanel);
+        return wrapper;
+    }
+
+    private JPanel buildChangePasswordCard(JFrame profileFrame, String studentID) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        JPanel form = new JPanel();
+        form.setLayout(new GridLayout(0, 2, 10, 12));
+        form.setBackground(Color.WHITE);
+        form.setBorder(BorderFactory.createTitledBorder("Change Password"));
+
+        JPasswordField oldPass = new JPasswordField();
+        JPasswordField newPass = new JPasswordField();
+        JPasswordField rePass = new JPasswordField();
+
+        form.add(new JLabel("Old Password:"));
+        form.add(oldPass);
+        form.add(new JLabel("New Password:"));
+        form.add(newPass);
+        form.add(new JLabel("Retype Password:"));
+        form.add(rePass);
+
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton saveBtn = new JButton("Save");
+        JButton cancelBtn = new JButton("Cancel");
+
+        saveBtn.addActionListener(e -> {
+            String oldP = new String(oldPass.getPassword()).trim();
+            String newP = new String(newPass.getPassword()).trim();
+            String reP = new String(rePass.getPassword()).trim();
+
+            if (!DataManager.authenticateUser(studentID, oldP)) {
+                JOptionPane.showMessageDialog(profileFrame, "Old password is incorrect.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (newP.isEmpty()) {
+                JOptionPane.showMessageDialog(profileFrame, "New password cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (!newP.equals(reP)) {
+                JOptionPane.showMessageDialog(profileFrame, "Passwords do not match.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (DataManager.updateStudentPassword(studentID, newP)) {
+                JOptionPane.showMessageDialog(profileFrame, "Password updated successfully.");
+                oldPass.setText("");
+                newPass.setText("");
+                rePass.setText("");
+            } else {
+                JOptionPane.showMessageDialog(profileFrame, "Failed to update password.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        cancelBtn.addActionListener(e -> {
+            oldPass.setText("");
+            newPass.setText("");
+            rePass.setText("");
+        });
+
+        buttons.add(saveBtn);
+        buttons.add(cancelBtn);
+
+        panel.add(form);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(buttons);
         return panel;
     }
     
