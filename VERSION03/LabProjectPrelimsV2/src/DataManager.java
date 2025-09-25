@@ -14,6 +14,80 @@ public class DataManager {
     private static final String USER_PASSWORD_FILE = "UserPasswordID.txt";
     private static final String PAYMENT_LOGS_FILE = "paymentLogs.txt";
     
+    // Header lines for Database.txt
+    private static final String DATABASE_HEADER_TITLE = "=== STUDENT DATABASE ===";
+    private static final String DATABASE_HEADER_FORMAT = "Format: ID,LastName,FirstName,MiddleName,DateOfBirth,Password|ProfileKey=Value;...";
+
+    private static boolean isHeaderLine(String line) {
+        if (line == null) return false;
+        String trimmed = line.trim();
+        return trimmed.startsWith("===") || trimmed.startsWith("Format:");
+    }
+    
+    private static boolean isDataLine(String line) {
+        if (line == null) return false;
+        String trimmed = line.trim();
+        if (trimmed.isEmpty() || isHeaderLine(trimmed)) {
+            return false;
+        }
+        String[] parts = trimmed.split(",");
+        if (parts.length < 6) {
+            return false;
+        }
+        String idCandidate = parts[0].trim();
+        return idCandidate.matches("\\d+");
+    }
+    
+    private static void ensureDatabaseHeader() {
+        try {
+            File dbFile = getDatabaseFile();
+            if (!dbFile.exists()) {
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(dbFile))) {
+                    writer.write(DATABASE_HEADER_TITLE);
+                    writer.newLine();
+                    writer.write(DATABASE_HEADER_FORMAT);
+                    writer.newLine();
+                    writer.newLine();
+                }
+                return;
+            }
+            // Check if header already present; if not, prepend it
+            java.util.List<String> lines = new java.util.ArrayList<>();
+            try (BufferedReader reader = new BufferedReader(new FileReader(dbFile))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    lines.add(line);
+                }
+            }
+            // Find first non-empty line
+            int firstIdx = -1;
+            for (int i = 0; i < lines.size(); i++) {
+                if (!lines.get(i).trim().isEmpty()) {
+                    firstIdx = i;
+                    break;
+                }
+            }
+            boolean hasHeader = false;
+            if (firstIdx != -1 && lines.get(firstIdx).trim().equals(DATABASE_HEADER_TITLE)) {
+                hasHeader = true;
+            }
+            if (!hasHeader) {
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(dbFile))) {
+                    writer.write(DATABASE_HEADER_TITLE);
+                    writer.newLine();
+                    writer.write(DATABASE_HEADER_FORMAT);
+                    writer.newLine();
+                    writer.newLine();
+                    for (String l : lines) {
+                        writer.write(l);
+                        writer.newLine();
+                    }
+                }
+            }
+        } catch (IOException ignored) {
+        }
+    }
+    
     /**
      * Resolve a data file by searching from the working directory and then walking up
      * from the compiled classes location. This makes file access robust regardless
@@ -70,8 +144,7 @@ public class DataManager {
             try (BufferedReader reader = new BufferedReader(new FileReader(databaseFile))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    // Skip empty lines
-                    if (line.trim().isEmpty()) {
+                    if (!isDataLine(line)) {
                         continue;
                     }
                     
@@ -112,8 +185,7 @@ public class DataManager {
             try (BufferedReader reader = new BufferedReader(new FileReader(databaseFile))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    // Skip empty lines
-                    if (line.trim().isEmpty()) {
+                    if (!isDataLine(line)) {
                         continue;
                     }
                     
@@ -152,7 +224,8 @@ public class DataManager {
      */
     public static boolean saveStudentAccount(StudentInfo studentInfo) {
         try {
-            // Save to Database.txt
+            // Ensure header exists, then save to Database.txt
+            ensureDatabaseHeader();
             File dbFile = getDatabaseFile();
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(dbFile, true))) {
                 String dbEntry = studentInfo.toDatabaseFormat();
@@ -190,10 +263,11 @@ public class DataManager {
                 try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        String[] parts = line.split(",");
-                        if (parts.length > 0) {
-                            usedIDs.add(parts[0]);
+                        if (!isDataLine(line)) {
+                            continue;
                         }
+                        String[] parts = line.split(",");
+                        usedIDs.add(parts[0]);
                     }
                 }
             }
@@ -290,8 +364,7 @@ public class DataManager {
             try (BufferedReader reader = new BufferedReader(new FileReader(databaseFile))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    // Skip empty lines
-                    if (line.trim().isEmpty()) {
+                    if (!isDataLine(line)) {
                         continue;
                     }
                     
@@ -331,8 +404,7 @@ public class DataManager {
                 try (BufferedReader reader = new BufferedReader(new FileReader(dbFile))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        if (line.trim().isEmpty()) continue;
-                        
+                        if (!isDataLine(line)) continue;
                         System.out.println("DEBUG: Checking line: " + line);
                         
                         // Handle lines with profile data (containing | separator)
@@ -375,11 +447,12 @@ public class DataManager {
                 try (BufferedReader reader = new BufferedReader(new FileReader(dbFile))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        if (line.trim().isEmpty()) continue;
-                        String[] parts = line.split(",");
-                        if (parts.length > 0 && parts[0].equals(studentID)) {
-                            // Append profile data to the existing line
-                            line = line + "|" + profileData;
+                        if (line.trim().isEmpty() || isHeaderLine(line)) { lines.add(line); continue; }
+                        String[] mainParts = line.split("\\|");
+                        String basicInfo = mainParts[0];
+                        String[] parts = basicInfo.split(",");
+                        if (parts.length > 0 && parts[0].trim().equals(studentID)) {
+                            line = basicInfo + "|" + profileData;
                         }
                         lines.add(line);
                     }
@@ -416,7 +489,7 @@ public class DataManager {
                 try (BufferedReader reader = new BufferedReader(new FileReader(dbFile))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        if (line.trim().isEmpty()) continue;
+                        if (line.trim().isEmpty() || isHeaderLine(line)) { lines.add(line); continue; }
                         
                         // Handle lines with profile data (containing | separator)
                         String[] mainParts = line.split("\\|");
