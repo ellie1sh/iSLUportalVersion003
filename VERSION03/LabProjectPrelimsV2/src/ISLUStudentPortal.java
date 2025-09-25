@@ -3384,7 +3384,7 @@ public class ISLUStudentPortal extends JFrame {
 
         // Header
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        headerPanel.setBackground(new Color(52, 73, 94));
+        headerPanel.setBackground(new Color(10, 45, 90));
         headerPanel.setPreferredSize(new Dimension(0, 50));
         
         JLabel headerIcon = new JLabel("📁");
@@ -3402,7 +3402,7 @@ public class ISLUStudentPortal extends JFrame {
         // Content with downloadable items
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        contentPanel.setBackground(new Color(245, 245, 245));
+        contentPanel.setBackground(Color.WHITE);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
         // Add all downloadable categories
@@ -3434,7 +3434,7 @@ public class ISLUStudentPortal extends JFrame {
 
         // Header
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        headerPanel.setBackground(new Color(52, 73, 94));
+        headerPanel.setBackground(new Color(10, 45, 90));
         headerPanel.setPreferredSize(new Dimension(0, 50));
         
         JLabel headerIcon = new JLabel("ℹ️");
@@ -3453,21 +3453,21 @@ public class ISLUStudentPortal extends JFrame {
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBackground(Color.WHITE);
-        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 20, 20));
 
         // OVERVIEW section
         JLabel overviewTitle = new JLabel("OVERVIEW");
-        overviewTitle.setFont(new Font("Arial", Font.BOLD, 18));
+        overviewTitle.setFont(new Font("Arial", Font.BOLD, 16));
         overviewTitle.setForeground(Color.BLACK);
         contentPanel.add(overviewTitle);
-        contentPanel.add(Box.createVerticalStrut(15));
+        contentPanel.add(Box.createVerticalStrut(10));
 
         // ABOUT ISLU PORTAL section
         JLabel aboutPortalTitle = new JLabel("ABOUT ISLU PORTAL");
-        aboutPortalTitle.setFont(new Font("Arial", Font.BOLD, 14));
+        aboutPortalTitle.setFont(new Font("Arial", Font.BOLD, 13));
         aboutPortalTitle.setForeground(Color.BLACK);
         contentPanel.add(aboutPortalTitle);
-        contentPanel.add(Box.createVerticalStrut(8));
+        contentPanel.add(Box.createVerticalStrut(6));
 
         JTextArea aboutPortalText = new JTextArea();
         aboutPortalText.setText("iSLU Portal is for Saint Louis University students and parents, that serves as a personal assistant in carrying out university-related tasks.\n\n" +
@@ -3480,14 +3480,14 @@ public class ISLUStudentPortal extends JFrame {
         aboutPortalText.setBackground(Color.WHITE);
         aboutPortalText.setBorder(null);
         contentPanel.add(aboutPortalText);
-        contentPanel.add(Box.createVerticalStrut(20));
+        contentPanel.add(Box.createVerticalStrut(15));
 
         // FEATURES AVAILABLE section
         JLabel featuresTitle = new JLabel("FEATURES AVAILABLE");
-        featuresTitle.setFont(new Font("Arial", Font.BOLD, 14));
+        featuresTitle.setFont(new Font("Arial", Font.BOLD, 13));
         featuresTitle.setForeground(Color.BLACK);
         contentPanel.add(featuresTitle);
-        contentPanel.add(Box.createVerticalStrut(8));
+        contentPanel.add(Box.createVerticalStrut(6));
 
         String[] features = {
             "Personal Details: where a student can view his/her personal information.",
@@ -3509,16 +3509,16 @@ public class ISLUStudentPortal extends JFrame {
             featureText.setBackground(Color.WHITE);
             featureText.setBorder(null);
             contentPanel.add(featureText);
-            contentPanel.add(Box.createVerticalStrut(5));
+            contentPanel.add(Box.createVerticalStrut(2));
         }
-        contentPanel.add(Box.createVerticalStrut(15));
+        contentPanel.add(Box.createVerticalStrut(10));
 
         // HOW TO REGISTER section
         JLabel registerTitle = new JLabel("HOW TO REGISTER? Or FORGOT USER ID Number and PASSWORD!");
-        registerTitle.setFont(new Font("Arial", Font.BOLD, 14));
+        registerTitle.setFont(new Font("Arial", Font.BOLD, 13));
         registerTitle.setForeground(Color.BLACK);
         contentPanel.add(registerTitle);
-        contentPanel.add(Box.createVerticalStrut(8));
+        contentPanel.add(Box.createVerticalStrut(6));
 
         JTextArea studentsText = new JTextArea();
         studentsText.setText("STUDENTS: proceed to IT CENTER SOFTWARE DEVELOPMENT (MIS), 2nd floor, Burgos Administrative Center, Saint Louis University.");
@@ -3550,38 +3550,38 @@ public class ISLUStudentPortal extends JFrame {
      */
     private void addDownloadableCategory(JPanel parent, String categoryName, String[] items) {
         // Category header
-        JLabel categoryLabel = new JLabel("• " + categoryName);
-        categoryLabel.setFont(new Font("Arial", Font.BOLD, 13));
+        JLabel categoryLabel = new JLabel("\u2022 " + categoryName);
+        categoryLabel.setFont(new Font("Arial", Font.BOLD, 12));
         categoryLabel.setForeground(Color.BLACK);
         parent.add(categoryLabel);
-        parent.add(Box.createVerticalStrut(8));
+        parent.add(Box.createVerticalStrut(6));
 
         // Category items
         for (String item : items) {
-            JPanel itemPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 2));
-            itemPanel.setBackground(new Color(245, 245, 245));
-            
-            JLabel itemLabel = new JLabel("○ " + item.split("\\|")[0]);
+            JPanel itemPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 18, 0));
+            itemPanel.setBackground(Color.WHITE);
+
+            JLabel itemLabel = new JLabel("\u25E6 " + item.split("\\|")[0]);
             itemLabel.setFont(new Font("Arial", Font.PLAIN, 12));
             itemLabel.setForeground(Color.BLACK);
             itemPanel.add(itemLabel);
-            
+
             JLabel downloadLink = new JLabel("[download]");
-            downloadLink.setFont(new Font("Arial", Font.PLAIN, 12));
-            downloadLink.setForeground(Color.RED);
+            downloadLink.setFont(new Font("Arial", Font.PLAIN, 11));
+            downloadLink.setForeground(new Color(200, 0, 0));
             downloadLink.setCursor(new Cursor(Cursor.HAND_CURSOR));
             downloadLink.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    JOptionPane.showMessageDialog(null, "Download functionality would be implemented here for: " + item.split("\\|")[0], 
+                    JOptionPane.showMessageDialog(null, "Download functionality would be implemented here for: " + item.split("\\|")[0],
                                                 "Download", JOptionPane.INFORMATION_MESSAGE);
                 }
             });
             itemPanel.add(downloadLink);
-            
+
             parent.add(itemPanel);
         }
-        parent.add(Box.createVerticalStrut(15));
+        parent.add(Box.createVerticalStrut(12));
     }
 
     // Helper methods to create downloadable items for each category
