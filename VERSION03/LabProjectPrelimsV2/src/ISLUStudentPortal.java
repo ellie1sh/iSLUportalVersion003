@@ -3583,7 +3583,8 @@ public class ISLUStudentPortal extends JFrame {
             downloadLink.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    handleDownload(item.split("\\|")[0]);
+                    JOptionPane.showMessageDialog(null, "Download functionality would be implemented here for: " + item.split("\\|")[0], 
+                                                "Download", JOptionPane.INFORMATION_MESSAGE);
                 }
             });
             itemPanel.add(downloadLink);
@@ -3591,143 +3592,6 @@ public class ISLUStudentPortal extends JFrame {
             parent.add(itemPanel);
         }
         parent.add(Box.createVerticalStrut(10));
-    }
-
-    /**
-     * Handles download functionality for downloadable items
-     * This method provides multiple implementation options for actual file downloads
-     */
-    private void handleDownload(String itemName) {
-        // Option 1: Simple placeholder (current implementation)
-        // JOptionPane.showMessageDialog(null, "Download functionality would be implemented here for: " + itemName, 
-        //                             "Download", JOptionPane.INFORMATION_MESSAGE);
-        
-        // Option 2: File chooser for local file download
-        try {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Save " + itemName);
-            fileChooser.setSelectedFile(new java.io.File(itemName + ".pdf"));
-            
-            int userSelection = fileChooser.showSaveDialog(this);
-            if (userSelection == JFileChooser.APPROVE_OPTION) {
-                java.io.File fileToSave = fileChooser.getSelectedFile();
-                
-                // Simulate download process
-                javax.swing.SwingWorker<Void, Void> downloadWorker = new javax.swing.SwingWorker<Void, Void>() {
-                    @Override
-                    protected Void doInBackground() throws Exception {
-                        // Here you would implement actual download logic:
-                        // 1. Connect to server/database to get file
-                        // 2. Download file content
-                        // 3. Save to selected location
-                        
-                        // For now, simulate download with progress
-                        Thread.sleep(1000); // Simulate download time
-                        
-                        // Create a sample file (in real implementation, this would be the downloaded content)
-                        try (java.io.FileWriter writer = new java.io.FileWriter(fileToSave)) {
-                            writer.write("Sample content for: " + itemName + "\n");
-                            writer.write("This would be the actual document content from the server.\n");
-                            writer.write("Generated on: " + new java.util.Date() + "\n");
-                        }
-                        
-                        return null;
-                    }
-                    
-                    @Override
-                    protected void done() {
-                        try {
-                            get(); // Check for exceptions
-                            JOptionPane.showMessageDialog(null, 
-                                "Successfully downloaded: " + itemName + "\nSaved to: " + fileToSave.getAbsolutePath(),
-                                "Download Complete", JOptionPane.INFORMATION_MESSAGE);
-                        } catch (Exception e) {
-                            JOptionPane.showMessageDialog(null, 
-                                "Failed to download: " + itemName + "\nError: " + e.getMessage(),
-                                "Download Error", JOptionPane.ERROR_MESSAGE);
-                        }
-                    }
-                };
-                
-                // Show progress dialog
-                javax.swing.ProgressMonitor progressMonitor = new javax.swing.ProgressMonitor(
-                    this, "Downloading " + itemName + "...", "", 0, 100);
-                progressMonitor.setProgress(0);
-                
-                downloadWorker.execute();
-                
-                // Simulate progress updates
-                javax.swing.Timer timer = new javax.swing.Timer(100, new java.awt.event.ActionListener() {
-                    int progress = 0;
-                    public void actionPerformed(java.awt.event.ActionEvent e) {
-                        progress += 10;
-                        progressMonitor.setProgress(progress);
-                        if (progress >= 100 || downloadWorker.isDone()) {
-                            ((javax.swing.Timer)e.getSource()).stop();
-                            progressMonitor.close();
-                        }
-                    }
-                });
-                timer.start();
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, 
-                "Error initiating download: " + e.getMessage(),
-                "Download Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    /**
-     * Alternative download method for web-based downloads
-     * Opens the default browser to download from a URL
-     */
-    private void handleWebDownload(String itemName) {
-        try {
-            // Map item names to actual download URLs
-            String downloadUrl = getDownloadUrl(itemName);
-            
-            if (downloadUrl != null) {
-                java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
-                if (desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
-                    desktop.browse(new java.net.URI(downloadUrl));
-                } else {
-                    // Fallback: copy URL to clipboard
-                    java.awt.datatransfer.StringSelection stringSelection = 
-                        new java.awt.datatransfer.StringSelection(downloadUrl);
-                    java.awt.Toolkit.getDefaultToolkit().getSystemClipboard()
-                        .setContents(stringSelection, null);
-                    
-                    JOptionPane.showMessageDialog(null, 
-                        "Browser not supported. Download URL copied to clipboard:\n" + downloadUrl,
-                        "Download URL", JOptionPane.INFORMATION_MESSAGE);
-                }
-            } else {
-                JOptionPane.showMessageDialog(null, 
-                    "Download URL not available for: " + itemName,
-                    "Download Error", JOptionPane.WARNING_MESSAGE);
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, 
-                "Error opening download URL: " + e.getMessage(),
-                "Download Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    /**
-     * Maps downloadable items to their corresponding URLs
-     * In a real implementation, this would connect to a database or configuration file
-     */
-    private String getDownloadUrl(String itemName) {
-        // This would typically be stored in a database or configuration file
-        java.util.Map<String, String> downloadUrls = new java.util.HashMap<>();
-        
-        // Sample URLs (these would be real URLs in production)
-        downloadUrls.put("Student Handbook", "https://www.slu.edu.ph/downloads/student-handbook.pdf");
-        downloadUrls.put("Safety Orientation Manual", "https://www.slu.edu.ph/downloads/safety-manual.pdf");
-        downloadUrls.put("SAMCIS Online Helpdesk", "https://www.slu.edu.ph/samcis/helpdesk");
-        // Add more mappings as needed...
-        
-        return downloadUrls.get(itemName);
     }
 
     // Helper methods to create downloadable items for each category
