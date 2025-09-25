@@ -1569,11 +1569,13 @@ public class ISLUStudentPortal extends JFrame {
         JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setBackground(new Color(248, 248, 248)); // Light gray background to match image
-        leftPanel.setPreferredSize(new Dimension(200, 0));
+        leftPanel.setPreferredSize(new Dimension(220, 0));
+        leftPanel.setMinimumSize(new Dimension(220, 400));
         leftPanel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-            BorderFactory.createEmptyBorder(15, 15, 15, 15)
+            BorderFactory.createEmptyBorder(20, 15, 20, 15)
         ));
+        leftPanel.setOpaque(true); // Ensure the panel is visible
         
         // Profile picture placeholder with better styling
         JLabel profilePicture = new JLabel();
@@ -1583,6 +1585,9 @@ public class ISLUStudentPortal extends JFrame {
         profilePicture.setPreferredSize(new Dimension(140, 140));
         profilePicture.setMaximumSize(new Dimension(140, 140));
         profilePicture.setMinimumSize(new Dimension(140, 140));
+        profilePicture.setOpaque(true);
+        profilePicture.setBackground(Color.WHITE);
+        profilePicture.setHorizontalAlignment(SwingConstants.CENTER);
         
         leftPanel.add(Box.createVerticalStrut(10));
         leftPanel.add(profilePicture);
@@ -1633,10 +1638,15 @@ public class ISLUStudentPortal extends JFrame {
             showPasswordChangeInRightPanel();
         });
         
+        // Ensure buttons are visible and properly added
+        personalDetailsBtn.setVisible(true);
+        accountInfoBtn.setVisible(true);
+        changePasswordBtn.setVisible(true);
+        
         leftPanel.add(personalDetailsBtn);
-        leftPanel.add(Box.createVerticalStrut(10));
+        leftPanel.add(Box.createVerticalStrut(12));
         leftPanel.add(accountInfoBtn);
-        leftPanel.add(Box.createVerticalStrut(10));
+        leftPanel.add(Box.createVerticalStrut(12));
         leftPanel.add(changePasswordBtn);
         leftPanel.add(Box.createVerticalGlue());
         
@@ -1668,15 +1678,15 @@ public class ISLUStudentPortal extends JFrame {
     private JButton createSidebarButton(String text) {
         JButton button = new JButton(text);
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
-        button.setPreferredSize(new Dimension(170, 35));
-        button.setMinimumSize(new Dimension(170, 35));
-        button.setMaximumSize(new Dimension(170, 35));
+        button.setPreferredSize(new Dimension(170, 40));
+        button.setMinimumSize(new Dimension(170, 40));
+        button.setMaximumSize(new Dimension(170, 40));
         button.setBackground(Color.WHITE);
         button.setForeground(new Color(60, 60, 60));
-        button.setFont(new Font("Arial", Font.PLAIN, 12));
+        button.setFont(new Font("Arial", Font.PLAIN, 13));
         button.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
-            BorderFactory.createEmptyBorder(8, 12, 8, 12)
+            BorderFactory.createLineBorder(new Color(180, 180, 180), 1),
+            BorderFactory.createEmptyBorder(10, 15, 10, 15)
         ));
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -1703,20 +1713,31 @@ public class ISLUStudentPortal extends JFrame {
      * Creates a profile picture icon (gray silhouette)
      */
     private ImageIcon createProfilePictureIcon() {
-        // Create a simple gray circle as profile picture placeholder
-        int size = 150;
+        // Create a profile picture placeholder matching the reference images
+        int size = 140;
         java.awt.image.BufferedImage image = new java.awt.image.BufferedImage(size, size, java.awt.image.BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = image.createGraphics();
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
-        // Fill with light gray
-        g2d.setColor(new Color(200, 200, 200));
-        g2d.fillOval(0, 0, size, size);
+        // Fill background with light gray
+        g2d.setColor(new Color(240, 240, 240));
+        g2d.fillRect(0, 0, size, size);
         
-        // Draw a simple person silhouette
-        g2d.setColor(new Color(150, 150, 150));
-        g2d.fillOval(size/4, size/4, size/2, size/2); // Head
-        g2d.fillOval(size/3, size*2/3, size/3, size/3); // Body
+        // Draw person silhouette similar to reference images
+        g2d.setColor(new Color(180, 180, 180));
+        
+        // Head (circle)
+        int headSize = size / 3;
+        int headX = (size - headSize) / 2;
+        int headY = size / 4;
+        g2d.fillOval(headX, headY, headSize, headSize);
+        
+        // Body (rounded rectangle)
+        int bodyWidth = size * 2 / 3;
+        int bodyHeight = size / 2;
+        int bodyX = (size - bodyWidth) / 2;
+        int bodyY = headY + headSize + 5;
+        g2d.fillRoundRect(bodyX, bodyY, bodyWidth, bodyHeight, 20, 20);
         
         g2d.dispose();
         return new ImageIcon(image);
