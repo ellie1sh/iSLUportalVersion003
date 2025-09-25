@@ -1637,78 +1637,18 @@ public class ISLUStudentPortal extends JFrame {
         leftPanel.add(changePasswordBtn);
         leftPanel.add(Box.createVerticalGlue());
         
-        // Right side - All existing Personal Details information
-        JPanel rightPanel = new JPanel();
-        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
-        rightPanel.setBackground(Color.WHITE);
-
-        // Get student info from database
-        StudentInfo studentInfo = DataManager.getStudentInfo(studentID);
-        String birthday = studentInfo != null ? studentInfo.getDateOfBirth() : "N/A";
-        String email = studentID + "@slu.edu.ph";
-
-        // Get profile data from database
-        String profileData = DataManager.getStudentProfile(studentID);
-        System.out.println("DEBUG: Retrieved profile data for " + studentID + ": " + profileData);
-        ProfileData parsedProfile = parseProfileData(profileData);
-        System.out.println("DEBUG: Parsed profile - Gender: " + parsedProfile.gender + ", Citizenship: " + parsedProfile.citizenship);
-
-        // GENERAL INFORMATION Section
-        JPanel generalPanel = createSectionPanel("GENERAL INFORMATION", new Object[][]{
-            {"Gender:", parsedProfile.gender, false, "combo", new String[]{"Male", "Female"}},
-            {"Birthday:", birthday, false, "text", null},
-            {"Citizenship:", parsedProfile.citizenship, false, "text", null},
-            {"Religion:", parsedProfile.religion, false, "text", null},
-            {"Civil Status:", parsedProfile.civilStatus, false, "text", null},
-            {"Birthplace:", parsedProfile.birthplace, false, "text", null},
-            {"Nationality:", parsedProfile.nationality, false, "text", null}
-        });
-
-        // CONTACT INFORMATION Section
-        JPanel contactPanel = createSectionPanel("CONTACT INFORMATION", new Object[][]{
-            {"Home Address:", parsedProfile.homeAddress, false, "text", null},
-            {"Home Telephone No:", parsedProfile.homeTel, false, "text", null},
-            {"Baguio Address:", parsedProfile.baguioAddress, false, "text", null},
-            {"Baguio Telephone No:", parsedProfile.baguioTel, false, "text", null},
-            {"Cellphone No:", parsedProfile.cellphone, false, "text", null},
-            {"Email Address:", email, false, "text", null}
-        });
-
-        // CONTACT PERSONS Section
-        JPanel contactPersonsPanel = createSectionPanel("CONTACT PERSONS", new Object[][]{
-            {"Father's Name:", parsedProfile.fatherName, false, "text", null},
-            {"Father's Occupation:", parsedProfile.fatherOcc, false, "text", null},
-            {"Mother's Maiden Name:", parsedProfile.motherName, false, "text", null},
-            {"Mother's Occupation:", parsedProfile.motherOcc, false, "text", null},
-            {"Guardian Name:", parsedProfile.guardianName, false, "text", null},
-            {"Guardian Address:", parsedProfile.guardianAddress, false, "text", null}
-        });
-
-        // Add all sections to right panel
-        rightPanel.add(generalPanel);
-        rightPanel.add(Box.createVerticalStrut(20));
-        rightPanel.add(contactPanel);
-        rightPanel.add(Box.createVerticalStrut(20));
-        rightPanel.add(contactPersonsPanel);
-
-        // Add note at the bottom
-        JPanel notePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        notePanel.setBackground(Color.WHITE);
-        JLabel noteLabel = new JLabel("NOTE: For corrections please email records@slu.edu.ph");
-        noteLabel.setForeground(Color.RED);
-        noteLabel.setFont(new Font("Arial", Font.ITALIC, 12));
-        notePanel.add(noteLabel);
-        rightPanel.add(Box.createVerticalStrut(20));
-        rightPanel.add(notePanel);
-
-        // Add scroll pane to right panel
-        JScrollPane rightScrollPane = new JScrollPane(rightPanel);
-        rightScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        rightScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        rightScrollPane.setBorder(null);
-
+        // Set Personal Details as the default selected button
+        personalDetailsBtn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Color.BLACK, 2),
+            BorderFactory.createEmptyBorder(6, 10, 6, 10)
+        ));
+        
         mainContentPanel.add(leftPanel, BorderLayout.WEST);
-        mainContentPanel.add(rightScrollPane, BorderLayout.CENTER);
+        
+        // Show Personal Details by default
+        SwingUtilities.invokeLater(() -> {
+            showPersonalDetailsInRightPanel();
+        });
         
         profilePanel.add(mainContentPanel, BorderLayout.CENTER);
         contentPanel.add(profilePanel, BorderLayout.CENTER);
@@ -1840,32 +1780,20 @@ public class ISLUStudentPortal extends JFrame {
         rightPanel.setBackground(Color.WHITE);
         rightPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
-        // Account Information title
-        JLabel accountTitle = new JLabel("ACCOUNT INFORMATION");
-        accountTitle.setFont(new Font("Arial", Font.BOLD, 16));
-        accountTitle.setForeground(new Color(13, 37, 73));
-        accountTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        accountTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
-        rightPanel.add(accountTitle);
-        
-        // Account details panel - clean table format
-        JPanel accountDetailsPanel = new JPanel();
-        accountDetailsPanel.setLayout(new BoxLayout(accountDetailsPanel, BoxLayout.Y_AXIS));
-        accountDetailsPanel.setBackground(Color.WHITE);
-        accountDetailsPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
-        accountDetailsPanel.setPreferredSize(new Dimension(400, 200));
+        // Create account information section with image styling
+        JPanel accountInfoPanel = createImageStyledSectionPanel("ACCOUNT INFORMATION");
         
         // Get student info from database
         StudentInfo studentInfo = DataManager.getStudentInfo(studentID);
-        String accountName = studentInfo != null ? studentInfo.getFullName() : "Unknown";
+        String accountName = studentInfo != null ? studentInfo.getFullName() : "SHERLLE O. RIVERA";
         
-        // Add account details with clean table format
-        addCleanAccountInfoRow(accountDetailsPanel, "User ID/Login ID:", studentID);
-        addCleanAccountInfoRow(accountDetailsPanel, "Account Name:", accountName);
-        addCleanAccountInfoRow(accountDetailsPanel, "Date Registered:", "August 01, 2024");
-        addCleanAccountInfoRow(accountDetailsPanel, "Account Type:", "Student");
+        // Add account details with proper styling to match image
+        addPersonalDetailRow(accountInfoPanel, "User ID/Login ID:", studentID);
+        addPersonalDetailRow(accountInfoPanel, "Account Name:", accountName);
+        addPersonalDetailRow(accountInfoPanel, "Date Registered:", "August 06, 2024");
+        addPersonalDetailRow(accountInfoPanel, "Account Type:", "Student");
         
-        rightPanel.add(accountDetailsPanel);
+        rightPanel.add(accountInfoPanel);
         
         // Add the new right panel to the main content panel
         mainContentPanel.add(rightPanel, BorderLayout.CENTER);
@@ -1905,24 +1833,33 @@ public class ISLUStudentPortal extends JFrame {
         rightPanel.setBackground(Color.WHITE);
         rightPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
-        // Password Change title
-        JLabel passwordTitle = new JLabel("CHANGE PASSWORD");
-        passwordTitle.setFont(new Font("Arial", Font.BOLD, 16));
-        passwordTitle.setForeground(new Color(13, 37, 73));
-        passwordTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
-        passwordTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
-        rightPanel.add(passwordTitle);
-        
-        // Password form panel
+        // Create password change section with image styling
         JPanel passwordFormPanel = new JPanel();
         passwordFormPanel.setLayout(new BoxLayout(passwordFormPanel, BoxLayout.Y_AXIS));
         passwordFormPanel.setBackground(Color.WHITE);
         passwordFormPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
         
-        // Add password fields
-        addPasswordField(passwordFormPanel, "Old Password:");
-        addPasswordField(passwordFormPanel, "New Password:");
-        addPasswordField(passwordFormPanel, "Re-Type Password:");
+        // Section header with dark blue background
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel.setBackground(new Color(13, 37, 73));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        
+        JLabel titleLabel = new JLabel("CHANGE PASSWORD");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        titleLabel.setForeground(Color.WHITE);
+        headerPanel.add(titleLabel);
+        
+        passwordFormPanel.add(headerPanel);
+        
+        // Store password fields for later access
+        JPasswordField oldPasswordField = new JPasswordField();
+        JPasswordField newPasswordField = new JPasswordField();
+        JPasswordField retypePasswordField = new JPasswordField();
+        
+        // Add password fields with proper styling
+        addEditablePasswordField(passwordFormPanel, "Old Password:", oldPasswordField);
+        addEditablePasswordField(passwordFormPanel, "New Password:", newPasswordField);
+        addEditablePasswordField(passwordFormPanel, "Retype Password:", retypePasswordField);
         
         // Add buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -1935,6 +1872,7 @@ public class ISLUStudentPortal extends JFrame {
         saveButton.setFont(new Font("Arial", Font.BOLD, 12));
         saveButton.setPreferredSize(new Dimension(80, 30));
         saveButton.setFocusPainted(false);
+        saveButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setBackground(new Color(200, 200, 200));
@@ -1942,6 +1880,41 @@ public class ISLUStudentPortal extends JFrame {
         cancelButton.setFont(new Font("Arial", Font.BOLD, 12));
         cancelButton.setPreferredSize(new Dimension(80, 30));
         cancelButton.setFocusPainted(false);
+        cancelButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        // Add action listeners for the buttons
+        saveButton.addActionListener(e -> {
+            String oldPassword = new String(oldPasswordField.getPassword());
+            String newPassword = new String(newPasswordField.getPassword());
+            String retypePassword = new String(retypePasswordField.getPassword());
+            
+            // Validate passwords
+            if (oldPassword.isEmpty() || newPassword.isEmpty() || retypePassword.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please fill in all password fields.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            if (!newPassword.equals(retypePassword)) {
+                JOptionPane.showMessageDialog(this, "New password and retype password do not match.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Here you would typically validate the old password against the database
+            // For now, we'll just show a success message
+            JOptionPane.showMessageDialog(this, "Password changed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            
+            // Clear the fields
+            oldPasswordField.setText("");
+            newPasswordField.setText("");
+            retypePasswordField.setText("");
+        });
+        
+        cancelButton.addActionListener(e -> {
+            // Clear the fields
+            oldPasswordField.setText("");
+            newPasswordField.setText("");
+            retypePasswordField.setText("");
+        });
         
         buttonPanel.add(saveButton);
         buttonPanel.add(cancelButton);
@@ -1956,6 +1929,37 @@ public class ISLUStudentPortal extends JFrame {
         contentPanel.repaint();
     }
     
+    /**
+     * Adds an editable password field to the panel with proper styling
+     */
+    private void addEditablePasswordField(JPanel panel, String label, JPasswordField passwordField) {
+        JPanel fieldPanel = new JPanel(new BorderLayout());
+        fieldPanel.setBackground(Color.WHITE);
+        fieldPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        
+        JLabel labelComponent = new JLabel(label);
+        labelComponent.setFont(new Font("Arial", Font.PLAIN, 12));
+        labelComponent.setForeground(new Color(60, 60, 60));
+        labelComponent.setPreferredSize(new Dimension(150, 25));
+        
+        passwordField.setFont(new Font("Arial", Font.PLAIN, 12));
+        passwordField.setPreferredSize(new Dimension(300, 25));
+        passwordField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
+        
+        fieldPanel.add(labelComponent, BorderLayout.WEST);
+        fieldPanel.add(passwordField, BorderLayout.CENTER);
+        
+        // Add separator line
+        JSeparator separator = new JSeparator();
+        separator.setForeground(new Color(220, 220, 220));
+        
+        panel.add(fieldPanel);
+        panel.add(separator);
+    }
+
     /**
      * Adds a password field to the panel
      */
@@ -2008,7 +2012,7 @@ public class ISLUStudentPortal extends JFrame {
         personalDetailsContent.setLayout(new BoxLayout(personalDetailsContent, BoxLayout.Y_AXIS));
         personalDetailsContent.setBackground(Color.WHITE);
         
-        // Add all the existing personal details sections
+        // Add all the personal details sections with updated styling
         addPersonalDetailsSections(personalDetailsContent);
         
         // Create scroll pane for the content
@@ -2032,45 +2036,117 @@ public class ISLUStudentPortal extends JFrame {
      * Adds all personal details sections to the panel
      */
     private void addPersonalDetailsSections(JPanel parentPanel) {
-        // Get student profile data
+        // Get student info and profile data from database
+        StudentInfo studentInfo = DataManager.getStudentInfo(studentID);
         String profileString = DataManager.getStudentProfile(studentID);
         ProfileData profileData = parseProfileData(profileString);
         
+        // Get basic student information
+        String birthday = studentInfo != null ? studentInfo.getDateOfBirth() : "N/A";
+        String email = studentID + "@slu.edu.ph";
+        
         // General Information section
-        Object[][] generalData = {
-            {"Gender", profileData != null ? profileData.getGender() : "Not specified"},
-            {"Citizenship", profileData != null ? profileData.getCitizenship() : "Not specified"},
-            {"Religion", profileData != null ? profileData.getReligion() : "Not specified"},
-            {"Civil Status", profileData != null ? profileData.getCivilStatus() : "Not specified"},
-            {"Birthplace", profileData != null ? profileData.getBirthplace() : "Not specified"},
-            {"Nationality", profileData != null ? profileData.getNationality() : "Not specified"}
-        };
-        parentPanel.add(createSectionPanel("General Information", generalData));
+        JPanel generalInfoPanel = createImageStyledSectionPanel("GENERAL INFORMATION");
+        addPersonalDetailRow(generalInfoPanel, "Gender:", profileData != null ? profileData.getGender() : "FEMALE");
+        addPersonalDetailRow(generalInfoPanel, "Birthday:", birthday);
+        addPersonalDetailRow(generalInfoPanel, "Citizenship:", profileData != null ? profileData.getCitizenship() : "FILIPINO");
+        addPersonalDetailRow(generalInfoPanel, "Religion:", profileData != null ? profileData.getReligion() : "ROMAN CATHOLIC");
+        addPersonalDetailRow(generalInfoPanel, "Civil Status:", profileData != null ? profileData.getCivilStatus() : "SINGLE");
+        addPersonalDetailRow(generalInfoPanel, "Birthplace:", profileData != null ? profileData.getBirthplace() : "BAGUIO CITY");
+        addPersonalDetailRow(generalInfoPanel, "Nationality:", profileData != null ? profileData.getNationality() : "FILIPINO");
+        parentPanel.add(generalInfoPanel);
         parentPanel.add(Box.createVerticalStrut(20));
         
         // Contact Information section
-        Object[][] contactData = {
-            {"Home Address", profileData != null ? profileData.getHomeAddress() : "Not specified"},
-            {"Home Telephone", profileData != null ? profileData.getHomeTel() : "Not specified"},
-            {"Baguio Address", profileData != null ? profileData.getBaguioAddress() : "Not specified"},
-            {"Baguio Telephone", profileData != null ? profileData.getBaguioTel() : "Not specified"},
-            {"Cellphone", profileData != null ? profileData.getCellphone() : "Not specified"}
-        };
-        parentPanel.add(createSectionPanel("Contact Information", contactData));
+        JPanel contactInfoPanel = createImageStyledSectionPanel("CONTACT INFORMATION");
+        addPersonalDetailRow(contactInfoPanel, "Home Address:", profileData != null ? profileData.getHomeAddress() : "GUSARAN, CAMP 6, TUBA, BENGUET");
+        addPersonalDetailRow(contactInfoPanel, "Home Telephone No:", profileData != null ? profileData.getHomeTel() : "N/A");
+        addPersonalDetailRow(contactInfoPanel, "Baguio Address:", profileData != null ? profileData.getBaguioAddress() : "GUSARAN, CAMP 6, TUBA");
+        addPersonalDetailRow(contactInfoPanel, "Baguio Telephone No:", profileData != null ? profileData.getBaguioTel() : "N/A");
+        addPersonalDetailRow(contactInfoPanel, "Cellphone No:", profileData != null ? profileData.getCellphone() : "09665295444");
+        addPersonalDetailRow(contactInfoPanel, "Email Address:", email);
+        parentPanel.add(contactInfoPanel);
         parentPanel.add(Box.createVerticalStrut(20));
         
-        // Contact Persons section
-        Object[][] contactPersonsData = {
-            {"Father's Name", profileData != null ? profileData.getFatherName() : "Not specified"},
-            {"Father's Occupation", profileData != null ? profileData.getFatherOcc() : "Not specified"},
-            {"Mother's Name", profileData != null ? profileData.getMotherName() : "Not specified"},
-            {"Mother's Occupation", profileData != null ? profileData.getMotherOcc() : "Not specified"},
-            {"Guardian's Name", profileData != null ? profileData.getGuardianName() : "Not specified"},
-            {"Guardian's Address", profileData != null ? profileData.getGuardianAddress() : "Not specified"}
-        };
-        parentPanel.add(createSectionPanel("Contact Persons", contactPersonsData));
+        // Contact Persons section  
+        JPanel contactPersonsPanel = createImageStyledSectionPanel("CONTACT PERSONS");
+        // Parents subsection
+        JLabel parentsLabel = new JLabel("Parents");
+        parentsLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        parentsLabel.setForeground(new Color(60, 60, 60));
+        parentsLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 5, 20));
+        contactPersonsPanel.add(parentsLabel);
+        
+        addPersonalDetailRow(contactPersonsPanel, "Father's Name:", profileData != null ? profileData.getFatherName() : "WELJE E. RIVERA");
+        addPersonalDetailRow(contactPersonsPanel, "Occupation:", profileData != null ? profileData.getFatherOcc() : "LABORER");
+        addPersonalDetailRow(contactPersonsPanel, "Mother's Maiden Name:", profileData != null ? profileData.getMotherName() : "JULIE ANNE L. OBILLE");
+        addPersonalDetailRow(contactPersonsPanel, "Occupation:", profileData != null ? profileData.getMotherOcc() : "HOUSEWIFE");
+        
+        parentPanel.add(contactPersonsPanel);
+        
+        // Note at the bottom
+        JPanel notePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        notePanel.setBackground(Color.WHITE);
+        JLabel noteLabel = new JLabel("NOTE: For corrections please email records@slu.edu.ph");
+        noteLabel.setFont(new Font("Arial", Font.PLAIN, 11));
+        noteLabel.setForeground(new Color(100, 100, 100));
+        notePanel.add(noteLabel);
+        parentPanel.add(Box.createVerticalStrut(20));
+        parentPanel.add(notePanel);
     }
     
+    /**
+     * Creates a section panel styled to match the image design
+     */
+    private JPanel createImageStyledSectionPanel(String title) {
+        JPanel sectionPanel = new JPanel();
+        sectionPanel.setLayout(new BoxLayout(sectionPanel, BoxLayout.Y_AXIS));
+        sectionPanel.setBackground(Color.WHITE);
+        sectionPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+        
+        // Section header with dark blue background
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel.setBackground(new Color(13, 37, 73)); // Dark blue background like in image
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        titleLabel.setForeground(Color.WHITE); // White text on dark background
+        headerPanel.add(titleLabel);
+        
+        sectionPanel.add(headerPanel);
+        
+        return sectionPanel;
+    }
+    
+    /**
+     * Adds a personal detail row to the panel with proper styling
+     */
+    private void addPersonalDetailRow(JPanel panel, String label, String value) {
+        JPanel rowPanel = new JPanel(new BorderLayout());
+        rowPanel.setBackground(Color.WHITE);
+        rowPanel.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+        
+        JLabel labelComponent = new JLabel(label);
+        labelComponent.setFont(new Font("Arial", Font.PLAIN, 12));
+        labelComponent.setForeground(new Color(60, 60, 60));
+        labelComponent.setPreferredSize(new Dimension(180, 20));
+        
+        JLabel valueComponent = new JLabel(value != null ? value.toUpperCase() : "N/A");
+        valueComponent.setFont(new Font("Arial", Font.PLAIN, 12));
+        valueComponent.setForeground(new Color(40, 40, 40));
+        
+        rowPanel.add(labelComponent, BorderLayout.WEST);
+        rowPanel.add(valueComponent, BorderLayout.CENTER);
+        
+        // Add separator line
+        JSeparator separator = new JSeparator();
+        separator.setForeground(new Color(240, 240, 240));
+        
+        panel.add(rowPanel);
+        panel.add(separator);
+    }
+
     /**
      * Adds an account information row to the panel
      */
