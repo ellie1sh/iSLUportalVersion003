@@ -53,8 +53,39 @@ public class CourseSchedule {
      * Checks if this course occurs on a specific day
      */
     public boolean occursOn(String day) {
-        Set<String> daySet = new HashSet<>(Arrays.asList(days.split("")));
-        return daySet.contains(day);
+        if (day == null || day.isEmpty() || days == null) return false;
+        String normalizedDay = day.trim();
+        // Accept both single-letter (M,T,W,Th,F,S) and two-letter (Mo,Tu,We,Th,Fr,Sa)
+        // Normalize stored days string into tokens: detect "Th" for Thursday first, then remaining single chars
+        Set<String> tokens = new HashSet<>();
+        String source = days.trim();
+        // Split by non-letters if provided like "M,W,F" or keep contiguous letters
+        source = source.replaceAll("[^A-Za-z]", "");
+        // Extract "Th" tokens first
+        int i = 0;
+        while (i < source.length()) {
+            if (i + 1 < source.length() && (source.charAt(i) == 'T' || source.charAt(i) == 't') &&
+                (source.charAt(i+1) == 'H' || source.charAt(i+1) == 'h')) {
+                tokens.add("Th");
+                i += 2;
+            } else {
+                tokens.add(String.valueOf(source.charAt(i)));
+                i++;
+            }
+        }
+        // Map normalizedDay to token we store
+        String key;
+        switch (normalizedDay) {
+            case "Monday": case "Mon": case "Mo": case "M": key = "M"; break;
+            case "Tuesday": case "Tue": case "Tu": case "T": key = "T"; break;
+            case "Wednesday": case "Wed": case "We": case "W": key = "W"; break;
+            case "Thursday": case "Thu": case "Th": key = "Th"; break;
+            case "Friday": case "Fri": case "Fr": case "F": key = "F"; break;
+            case "Saturday": case "Sat": case "Sa": case "S": key = "S"; break;
+            case "Sunday": case "Sun": case "Su": case "U": key = "U"; break;
+            default: key = normalizedDay;
+        }
+        return tokens.contains(key);
     }
     
     /**

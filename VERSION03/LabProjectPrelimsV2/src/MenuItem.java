@@ -1,5 +1,3 @@
-import java.util.LinkedList;
-
 // Custom class to hold menu data
 public class MenuItem {
     private String name;
