@@ -1525,21 +1525,27 @@ public class ISLUStudentPortal extends JFrame {
             BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
         
-        // Header with "User Profile" title
-        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        // Header with "User Profile" title - improved layout
+        JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(new Color(13, 37, 73));
         headerPanel.setPreferredSize(new Dimension(0, 50));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        
+        // Left side with icon and title
+        JPanel leftHeaderPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        leftHeaderPanel.setBackground(new Color(13, 37, 73));
         
         JLabel headerIcon = new JLabel("👤");
         headerIcon.setForeground(Color.WHITE);
         headerIcon.setFont(new Font("Arial", Font.PLAIN, 20));
-        headerPanel.add(headerIcon);
+        leftHeaderPanel.add(headerIcon);
         
         JLabel headerLabel = new JLabel("User Profile");
         headerLabel.setForeground(Color.WHITE);
         headerLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        headerPanel.add(headerLabel);
+        leftHeaderPanel.add(headerLabel);
         
+        headerPanel.add(leftHeaderPanel, BorderLayout.WEST);
         profilePanel.add(headerPanel, BorderLayout.NORTH);
         
         // Main content area with two columns
@@ -1547,78 +1553,43 @@ public class ISLUStudentPortal extends JFrame {
         mainContentPanel.setBackground(Color.WHITE);
         mainContentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
-        // Left side - Profile picture and action buttons
+        // Left side - Profile picture and action buttons (Sidebar Panel)
         JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
-        leftPanel.setBackground(Color.WHITE);
+        leftPanel.setBackground(new Color(248, 248, 248)); // Light gray background to match image
         leftPanel.setPreferredSize(new Dimension(200, 0));
+        leftPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
+            BorderFactory.createEmptyBorder(15, 15, 15, 15)
+        ));
         
-        // Profile picture placeholder
+        // Profile picture placeholder with better styling
         JLabel profilePicture = new JLabel();
         profilePicture.setIcon(createProfilePictureIcon());
         profilePicture.setAlignmentX(Component.CENTER_ALIGNMENT);
-        profilePicture.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
-        profilePicture.setPreferredSize(new Dimension(150, 150));
-        profilePicture.setMaximumSize(new Dimension(150, 150));
-        profilePicture.setMinimumSize(new Dimension(150, 150));
+        profilePicture.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 2));
+        profilePicture.setPreferredSize(new Dimension(140, 140));
+        profilePicture.setMaximumSize(new Dimension(140, 140));
+        profilePicture.setMinimumSize(new Dimension(140, 140));
         
-        leftPanel.add(Box.createVerticalStrut(20));
+        leftPanel.add(Box.createVerticalStrut(10));
         leftPanel.add(profilePicture);
-        leftPanel.add(Box.createVerticalStrut(20));
+        leftPanel.add(Box.createVerticalStrut(25));
         
-        // Action buttons - styled to match the design
-        JButton personalDetailsBtn = new JButton("Personal Details");
-        personalDetailsBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        personalDetailsBtn.setPreferredSize(new Dimension(180, 40));
-        personalDetailsBtn.setMinimumSize(new Dimension(180, 40));
-        personalDetailsBtn.setMaximumSize(new Dimension(180, 40));
-        personalDetailsBtn.setBackground(new Color(245, 245, 245));
-        personalDetailsBtn.setForeground(new Color(60, 60, 60));
-        personalDetailsBtn.setFont(new Font("Arial", Font.PLAIN, 12));
-        personalDetailsBtn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-            BorderFactory.createEmptyBorder(8, 12, 8, 12)
-        ));
-        personalDetailsBtn.setFocusPainted(false);
-        personalDetailsBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        JButton accountInfoBtn = new JButton("Account Info");
-        accountInfoBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        accountInfoBtn.setPreferredSize(new Dimension(180, 40));
-        accountInfoBtn.setMinimumSize(new Dimension(180, 40));
-        accountInfoBtn.setMaximumSize(new Dimension(180, 40));
-        accountInfoBtn.setBackground(new Color(245, 245, 245));
-        accountInfoBtn.setForeground(new Color(60, 60, 60));
-        accountInfoBtn.setFont(new Font("Arial", Font.PLAIN, 12));
-        accountInfoBtn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-            BorderFactory.createEmptyBorder(8, 12, 8, 12)
-        ));
-        accountInfoBtn.setFocusPainted(false);
-        accountInfoBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        JButton changePasswordBtn = new JButton("Change Password");
-        changePasswordBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        changePasswordBtn.setPreferredSize(new Dimension(180, 40));
-        changePasswordBtn.setMinimumSize(new Dimension(180, 40));
-        changePasswordBtn.setMaximumSize(new Dimension(180, 40));
-        changePasswordBtn.setBackground(new Color(245, 245, 245));
-        changePasswordBtn.setForeground(new Color(60, 60, 60));
-        changePasswordBtn.setFont(new Font("Arial", Font.PLAIN, 12));
-        changePasswordBtn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-            BorderFactory.createEmptyBorder(8, 12, 8, 12)
-        ));
-        changePasswordBtn.setFocusPainted(false);
-        changePasswordBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        // Action buttons - styled to match the design with icons
+        JButton personalDetailsBtn = createSidebarButton("📋 Personal Details");
+        JButton accountInfoBtn = createSidebarButton("🔐 Account Info");  
+        JButton changePasswordBtn = createSidebarButton("🔑 Change Password");
         
         // Add action listeners
         personalDetailsBtn.addActionListener(e -> {
             // Reset all button styles
             resetButtonStyles(personalDetailsBtn, accountInfoBtn, changePasswordBtn);
             // Highlight current button
+            personalDetailsBtn.setBackground(new Color(13, 37, 73));
+            personalDetailsBtn.setForeground(Color.WHITE);
             personalDetailsBtn.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.BLACK, 2),
+                BorderFactory.createLineBorder(new Color(13, 37, 73), 2),
                 BorderFactory.createEmptyBorder(6, 10, 6, 10)
             ));
             showPersonalDetailsInRightPanel();
@@ -1628,8 +1599,10 @@ public class ISLUStudentPortal extends JFrame {
             // Reset all button styles
             resetButtonStyles(personalDetailsBtn, accountInfoBtn, changePasswordBtn);
             // Highlight current button
+            accountInfoBtn.setBackground(new Color(13, 37, 73));
+            accountInfoBtn.setForeground(Color.WHITE);
             accountInfoBtn.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.BLACK, 2),
+                BorderFactory.createLineBorder(new Color(13, 37, 73), 2),
                 BorderFactory.createEmptyBorder(6, 10, 6, 10)
             ));
             showAccountInfo();
@@ -1639,8 +1612,10 @@ public class ISLUStudentPortal extends JFrame {
             // Reset all button styles
             resetButtonStyles(personalDetailsBtn, accountInfoBtn, changePasswordBtn);
             // Highlight current button
+            changePasswordBtn.setBackground(new Color(13, 37, 73));
+            changePasswordBtn.setForeground(Color.WHITE);
             changePasswordBtn.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.BLACK, 2),
+                BorderFactory.createLineBorder(new Color(13, 37, 73), 2),
                 BorderFactory.createEmptyBorder(6, 10, 6, 10)
             ));
             showPasswordChangeInRightPanel();
@@ -1654,8 +1629,10 @@ public class ISLUStudentPortal extends JFrame {
         leftPanel.add(Box.createVerticalGlue());
         
         // Set Personal Details as the default selected button
+        personalDetailsBtn.setBackground(new Color(13, 37, 73));
+        personalDetailsBtn.setForeground(Color.WHITE);
         personalDetailsBtn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Color.BLACK, 2),
+            BorderFactory.createLineBorder(new Color(13, 37, 73), 2),
             BorderFactory.createEmptyBorder(6, 10, 6, 10)
         ));
         
@@ -1671,6 +1648,43 @@ public class ISLUStudentPortal extends JFrame {
         
         contentPanel.revalidate();
         contentPanel.repaint();
+    }
+    
+    /**
+     * Creates a styled sidebar button
+     */
+    private JButton createSidebarButton(String text) {
+        JButton button = new JButton(text);
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        button.setPreferredSize(new Dimension(170, 35));
+        button.setMinimumSize(new Dimension(170, 35));
+        button.setMaximumSize(new Dimension(170, 35));
+        button.setBackground(Color.WHITE);
+        button.setForeground(new Color(60, 60, 60));
+        button.setFont(new Font("Arial", Font.PLAIN, 12));
+        button.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+            BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setHorizontalAlignment(SwingConstants.LEFT);
+        
+        // Add hover effect
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                if (!button.getBorder().toString().contains("LineBorder[color=java.awt.Color[r=0,g=0,b=0]")) {
+                    button.setBackground(new Color(240, 240, 240));
+                }
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                if (!button.getBorder().toString().contains("LineBorder[color=java.awt.Color[r=0,g=0,b=0]")) {
+                    button.setBackground(Color.WHITE);
+                }
+            }
+        });
+        
+        return button;
     }
     
     /**
@@ -1824,8 +1838,10 @@ public class ISLUStudentPortal extends JFrame {
     private void resetButtonStyles(JButton btn1, JButton btn2, JButton btn3) {
         JButton[] buttons = {btn1, btn2, btn3};
         for (JButton btn : buttons) {
+            btn.setBackground(Color.WHITE);
+            btn.setForeground(new Color(60, 60, 60));
             btn.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
                 BorderFactory.createEmptyBorder(8, 12, 8, 12)
             ));
         }
