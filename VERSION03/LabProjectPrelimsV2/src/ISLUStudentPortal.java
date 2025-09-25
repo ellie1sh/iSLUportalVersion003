@@ -3392,7 +3392,7 @@ public class ISLUStudentPortal extends JFrame {
         headerIcon.setFont(new Font("Arial", Font.PLAIN, 20));
         headerPanel.add(headerIcon);
         
-        JLabel headerLabel = new JLabel(subItems.getFirst());
+        JLabel headerLabel = new JLabel("Downloadables");
         headerLabel.setForeground(new Color(255, 204, 102));
         headerLabel.setFont(new Font("Arial", Font.BOLD, 16));
         headerPanel.add(headerLabel);
@@ -3402,7 +3402,7 @@ public class ISLUStudentPortal extends JFrame {
         // Content with downloadable items
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        contentPanel.setBackground(new Color(245, 245, 245));
+        contentPanel.setBackground(Color.WHITE);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
         // Add all downloadable categories
@@ -3413,6 +3413,7 @@ public class ISLUStudentPortal extends JFrame {
         addDownloadableCategory(contentPanel, "SAS", createSASDownloadables());
         addDownloadableCategory(contentPanel, "SEA", createSEADownloadables());
         addDownloadableCategory(contentPanel, "SONAHBS", createSONAHBSDownloadables());
+        addDownloadableCategory(contentPanel, "SOL", createSOLDownloadables());
         addDownloadableCategory(contentPanel, "SOM", createSOMDownloadables());
         addDownloadableCategory(contentPanel, "STELA", createSTELADownloadables());
         addDownloadableCategory(contentPanel, "Student Services Orientation", createStudentServicesDownloadables());
@@ -3442,7 +3443,7 @@ public class ISLUStudentPortal extends JFrame {
         headerIcon.setFont(new Font("Arial", Font.PLAIN, 20));
         headerPanel.add(headerIcon);
         
-        JLabel headerLabel = new JLabel(subItems.get(1));
+        JLabel headerLabel = new JLabel("About iSLU");
         headerLabel.setForeground(new Color(255, 204, 102));
         headerLabel.setFont(new Font("Arial", Font.BOLD, 16));
         headerPanel.add(headerLabel);
@@ -3540,6 +3541,14 @@ public class ISLUStudentPortal extends JFrame {
         parentsText.setBackground(Color.WHITE);
         parentsText.setBorder(null);
         contentPanel.add(parentsText);
+        contentPanel.add(Box.createVerticalStrut(20));
+
+        // Copyright footer
+        JLabel copyrightLabel = new JLabel("Copyright © 2025 Saint Louis University Inc. All rights reserved.");
+        copyrightLabel.setFont(new Font("Arial", Font.PLAIN, 11));
+        copyrightLabel.setForeground(Color.GRAY);
+        copyrightLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        contentPanel.add(copyrightLabel);
 
         panel.add(contentPanel, BorderLayout.CENTER);
         return panel;
@@ -3553,15 +3562,16 @@ public class ISLUStudentPortal extends JFrame {
         JLabel categoryLabel = new JLabel("• " + categoryName);
         categoryLabel.setFont(new Font("Arial", Font.BOLD, 13));
         categoryLabel.setForeground(Color.BLACK);
+        categoryLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
         parent.add(categoryLabel);
-        parent.add(Box.createVerticalStrut(8));
 
         // Category items
         for (String item : items) {
-            JPanel itemPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 2));
-            itemPanel.setBackground(new Color(245, 245, 245));
+            JPanel itemPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 2));
+            itemPanel.setBackground(Color.WHITE);
+            itemPanel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
             
-            JLabel itemLabel = new JLabel("○ " + item.split("\\|")[0]);
+            JLabel itemLabel = new JLabel("○ " + item.split("\\|")[0] + " ");
             itemLabel.setFont(new Font("Arial", Font.PLAIN, 12));
             itemLabel.setForeground(Color.BLACK);
             itemPanel.add(itemLabel);
@@ -3581,7 +3591,7 @@ public class ISLUStudentPortal extends JFrame {
             
             parent.add(itemPanel);
         }
-        parent.add(Box.createVerticalStrut(15));
+        parent.add(Box.createVerticalStrut(10));
     }
 
     // Helper methods to create downloadable items for each category
@@ -3654,6 +3664,13 @@ public class ISLUStudentPortal extends JFrame {
     private String[] createSONAHBSDownloadables() {
         return new String[]{
             "SONAHBS Online Helpdesk",
+            "SNS Program Offerings Overview",
+            "SON Program Offerings Overview"
+        };
+    }
+
+    private String[] createSOLDownloadables() {
+        return new String[]{
             "SOL Online Helpdesk"
         };
     }
