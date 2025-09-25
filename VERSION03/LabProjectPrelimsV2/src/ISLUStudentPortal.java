@@ -1919,10 +1919,10 @@ public class ISLUStudentPortal extends JFrame {
         passwordFormPanel.setBackground(Color.WHITE);
         passwordFormPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
         
-        // Add password fields
-        addPasswordField(passwordFormPanel, "Old Password:");
-        addPasswordField(passwordFormPanel, "New Password:");
-        addPasswordField(passwordFormPanel, "Re-Type Password:");
+        // Add password fields (editable)
+        JPasswordField oldPasswordField = addPasswordField(passwordFormPanel, "Old Password:");
+        JPasswordField newPasswordField = addPasswordField(passwordFormPanel, "New Password:");
+        JPasswordField retypePasswordField = addPasswordField(passwordFormPanel, "Re-Type Password:");
         
         // Add buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -1943,6 +1943,38 @@ public class ISLUStudentPortal extends JFrame {
         cancelButton.setPreferredSize(new Dimension(80, 30));
         cancelButton.setFocusPainted(false);
         
+        // Save action: validate and update password in database
+        saveButton.addActionListener(e -> {
+            String oldPass = new String(oldPasswordField.getPassword());
+            String newPass = new String(newPasswordField.getPassword());
+            String retypePass = new String(retypePasswordField.getPassword());
+
+            if (oldPass.isEmpty() || newPass.isEmpty() || retypePass.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (!newPass.equals(retypePass)) {
+                JOptionPane.showMessageDialog(this, "New passwords do not match.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            // Optional: verify old password matches current one
+            StudentInfo info = DataManager.getStudentInfo(studentID);
+            if (info != null && !oldPass.equals(info.getPassword())) {
+                JOptionPane.showMessageDialog(this, "Old password is incorrect.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            boolean updated = DataManager.updateStudentPassword(studentID, newPass);
+            if (updated) {
+                JOptionPane.showMessageDialog(this, "Password updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                // Clear fields
+                oldPasswordField.setText("");
+                newPasswordField.setText("");
+                retypePasswordField.setText("");
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to update password. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
         buttonPanel.add(saveButton);
         buttonPanel.add(cancelButton);
         
@@ -1959,7 +1991,7 @@ public class ISLUStudentPortal extends JFrame {
     /**
      * Adds a password field to the panel
      */
-    private void addPasswordField(JPanel panel, String label) {
+    private JPasswordField addPasswordField(JPanel panel, String label) {
         JPanel fieldPanel = new JPanel(new BorderLayout());
         fieldPanel.setBackground(Color.WHITE);
         fieldPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
@@ -1983,6 +2015,7 @@ public class ISLUStudentPortal extends JFrame {
         
         panel.add(fieldPanel);
         panel.add(separator);
+        return passwordField;
     }
     
     /**
@@ -2032,43 +2065,48 @@ public class ISLUStudentPortal extends JFrame {
      * Adds all personal details sections to the panel
      */
     private void addPersonalDetailsSections(JPanel parentPanel) {
-        // Get student profile data
+        // Fetch from database
         String profileString = DataManager.getStudentProfile(studentID);
         ProfileData profileData = parseProfileData(profileString);
-        
-        // General Information section
-        Object[][] generalData = {
-            {"Gender", profileData != null ? profileData.getGender() : "Not specified"},
-            {"Citizenship", profileData != null ? profileData.getCitizenship() : "Not specified"},
-            {"Religion", profileData != null ? profileData.getReligion() : "Not specified"},
-            {"Civil Status", profileData != null ? profileData.getCivilStatus() : "Not specified"},
-            {"Birthplace", profileData != null ? profileData.getBirthplace() : "Not specified"},
-            {"Nationality", profileData != null ? profileData.getNationality() : "Not specified"}
+        StudentInfo studentInfo = DataManager.getStudentInfo(studentID);
+        String birthday = studentInfo != null ? studentInfo.getDateOfBirth() : "N/A";
+        String email = studentID + "@slu.edu.ph";
+
+        // GENERAL INFORMATION (read-only)
+        Object[][] generalReadonly = new Object[][]{
+            {"Gender:", profileData != null ? profileData.getGender() : "Not specified", false, "text", null},
+            {"Birthday:", birthday, false, "text", null},
+            {"Citizenship:", profileData != null ? profileData.getCitizenship() : "Not specified", false, "text", null},
+            {"Religion:", profileData != null ? profileData.getReligion() : "Not specified", false, "text", null},
+            {"Civil Status:", profileData != null ? profileData.getCivilStatus() : "Not specified", false, "text", null},
+            {"Birthplace:", profileData != null ? profileData.getBirthplace() : "Not specified", false, "text", null},
+            {"Nationality:", profileData != null ? profileData.getNationality() : "Not specified", false, "text", null}
         };
-        parentPanel.add(createSectionPanel("General Information", generalData));
+        parentPanel.add(createSectionPanel("GENERAL INFORMATION", generalReadonly));
         parentPanel.add(Box.createVerticalStrut(20));
-        
-        // Contact Information section
-        Object[][] contactData = {
-            {"Home Address", profileData != null ? profileData.getHomeAddress() : "Not specified"},
-            {"Home Telephone", profileData != null ? profileData.getHomeTel() : "Not specified"},
-            {"Baguio Address", profileData != null ? profileData.getBaguioAddress() : "Not specified"},
-            {"Baguio Telephone", profileData != null ? profileData.getBaguioTel() : "Not specified"},
-            {"Cellphone", profileData != null ? profileData.getCellphone() : "Not specified"}
+
+        // CONTACT INFORMATION (read-only)
+        Object[][] contactReadonly = new Object[][]{
+            {"Home Address:", profileData != null ? profileData.getHomeAddress() : "Not specified", false, "text", null},
+            {"Home Telephone No:", profileData != null ? profileData.getHomeTel() : "Not specified", false, "text", null},
+            {"Baguio Address:", profileData != null ? profileData.getBaguioAddress() : "Not specified", false, "text", null},
+            {"Baguio Telephone No:", profileData != null ? profileData.getBaguioTel() : "Not specified", false, "text", null},
+            {"Cellphone No:", profileData != null ? profileData.getCellphone() : "Not specified", false, "text", null},
+            {"Email Address:", email, false, "text", null}
         };
-        parentPanel.add(createSectionPanel("Contact Information", contactData));
+        parentPanel.add(createSectionPanel("CONTACT INFORMATION", contactReadonly));
         parentPanel.add(Box.createVerticalStrut(20));
-        
-        // Contact Persons section
-        Object[][] contactPersonsData = {
-            {"Father's Name", profileData != null ? profileData.getFatherName() : "Not specified"},
-            {"Father's Occupation", profileData != null ? profileData.getFatherOcc() : "Not specified"},
-            {"Mother's Name", profileData != null ? profileData.getMotherName() : "Not specified"},
-            {"Mother's Occupation", profileData != null ? profileData.getMotherOcc() : "Not specified"},
-            {"Guardian's Name", profileData != null ? profileData.getGuardianName() : "Not specified"},
-            {"Guardian's Address", profileData != null ? profileData.getGuardianAddress() : "Not specified"}
+
+        // CONTACT PERSONS (read-only)
+        Object[][] contactPersonsReadonly = new Object[][]{
+            {"Father's Name:", profileData != null ? profileData.getFatherName() : "Not specified", false, "text", null},
+            {"Father's Occupation:", profileData != null ? profileData.getFatherOcc() : "Not specified", false, "text", null},
+            {"Mother's Maiden Name:", profileData != null ? profileData.getMotherName() : "Not specified", false, "text", null},
+            {"Mother's Occupation:", profileData != null ? profileData.getMotherOcc() : "Not specified", false, "text", null},
+            {"Guardian Name:", profileData != null ? profileData.getGuardianName() : "Not specified", false, "text", null},
+            {"Guardian Address:", profileData != null ? profileData.getGuardianAddress() : "Not specified", false, "text", null}
         };
-        parentPanel.add(createSectionPanel("Contact Persons", contactPersonsData));
+        parentPanel.add(createSectionPanel("CONTACT PERSONS", contactPersonsReadonly));
     }
     
     /**
