@@ -1010,32 +1010,329 @@ public class ISLUStudentPortal extends JFrame {
     }
     // method for attendance Content
     private Component showAttendanceContent(MySinglyLinkedList<String> subItems) {
-        JPanel attendancePanel = new JPanel(new BorderLayout());
-        attendancePanel.setBorder(BorderFactory.createTitledBorder(subItems.toString()));
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(new Color(240, 240, 240));
+        mainPanel.setBorder(BorderFactory.createTitledBorder(subItems.toString()));
+        
+        // NOTE: This uses stubbed data so UI matches the reference.
+        // Backend source of truth should come from the faculty side later.
+        java.util.Map<String, java.util.List<AbsenceTardyRecord>> absenceData = loadStubAbsenceTardyData();
+        
+        if (absenceData.isEmpty()) {
+            mainPanel.add(createNoAbsencesPanel(), BorderLayout.CENTER);
+            return mainPanel;
+        }
+        
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(Color.WHITE);
+        content.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200)),
+                BorderFactory.createEmptyBorder(15, 15, 15, 15)
+        ));
+        
+        // READMISSION RECORDS section
+        content.add(createReadmissionSection());
+        content.add(Box.createVerticalStrut(10));
+        
+        java.util.Map<String, CourseScheduleItem> codeToCourse = new java.util.HashMap<>();
+        for (CourseScheduleItem c : getSampleCourses()) {
+            codeToCourse.put(c.classCode, c);
+        }
+        
+        for (java.util.Map.Entry<String, java.util.List<AbsenceTardyRecord>> entry : absenceData.entrySet()) {
+            CourseScheduleItem course = codeToCourse.get(entry.getKey());
+            if (course != null) {
+                content.add(createCourseAbsenceSection(course, entry.getValue()));
+                content.add(Box.createVerticalStrut(15));
+            }
+        }
+        
+        JScrollPane scroll = new JScrollPane(content);
+        scroll.setBorder(null);
+        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        
+        mainPanel.add(scroll, BorderLayout.CENTER);
+        return mainPanel;
+    }
 
-        String[] columnNames = {"Subject", "Present", "Absent", "Late", "Percentage"};
-        Object[][] data = {
-                {"NSTP-CWTS 1", "15", "1", "0", "93.75%"},
-                {"Programming 2", "14", "2", "1", "87.5%"},
-                {"Data Structures", "16", "0", "1", "100%"},
-                {"Database Systems", "15", "1", "0", "93.75%"},
-                {"Web Development", "13", "2", "2", "81.25%"}
+    // Simple holder for an absence/tardy entry used by the Attendance UI only.
+    private static class AbsenceTardyRecord {
+        final java.time.LocalDate date;
+        final String type; // "Absent" or "Tardy"
+        String remarks;    // optional
+        AbsenceTardyRecord(java.time.LocalDate date, String type) {
+            this.date = date;
+            this.type = type;
+        }
+    }
+    
+    // TEMP DATA SOURCE (Student-side only). Replace with actual faculty-provided data later.
+    // To wire the backend later, delete this method and call into your Faculty/Attendance service.
+    private java.util.Map<String, java.util.List<AbsenceTardyRecord>> loadStubAbsenceTardyData() {
+        java.util.Map<String, java.util.List<AbsenceTardyRecord>> map = new java.util.LinkedHashMap<>();
+        
+        // Example records based on the reference images:
+        // 9455 - GENVI (ENVIRONMENTAL SCIENCE) -> SEP-03-2025 Absent
+        map.put("9455", new java.util.ArrayList<>());
+        map.get("9455").add(new AbsenceTardyRecord(java.time.LocalDate.of(2025, 9, 3), "Absent"));
+        
+        // 9457 - IT 211 (REQUIREMENTS ANALYSIS AND MODELING) -> SEP-03-2025 Absent
+        map.put("9457", new java.util.ArrayList<>());
+        map.get("9457").add(new AbsenceTardyRecord(java.time.LocalDate.of(2025, 9, 3), "Absent"));
+        
+        // 9458A - IT 212 (DATA STRUCTURES LEC) -> SEP-02-2025 Absent
+        map.put("9458A", new java.util.ArrayList<>());
+        map.get("9458A").add(new AbsenceTardyRecord(java.time.LocalDate.of(2025, 9, 2), "Absent"));
+        
+        // 9458B - IT 212L (DATA STRUCTURES LAB) -> SEP-02-2025 Absent
+        map.put("9458B", new java.util.ArrayList<>());
+        map.get("9458B").add(new AbsenceTardyRecord(java.time.LocalDate.of(2025, 9, 2), "Absent"));
+        
+        return map;
+    }
+    
+    // Panel for the "Great! No Absences/Tardiness were found." state
+    private JPanel createNoAbsencesPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(10, 10, 10, 10);
+        
+        JLabel greatLabel = new JLabel("Great! 👍");
+        greatLabel.setFont(new Font("Arial", Font.BOLD, 36));
+        greatLabel.setForeground(new Color(13, 37, 73));
+        panel.add(greatLabel, gbc);
+        
+        gbc.gridy++;
+        JLabel info = new JLabel("No Absences/Tardiness were found.");
+        info.setFont(new Font("Arial", Font.PLAIN, 16));
+        panel.add(info, gbc);
+        
+        gbc.gridy++;
+        JLabel link = new JLabel("<html><u>click here</u> to go back home</html>");
+        link.setForeground(new Color(4, 102, 200));
+        link.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        panel.add(link, gbc);
+        
+        link.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                // Navigate to Home content
+                setupLayout(PortalUtils.createHomeSublist());
+            }
+        });
+        
+        return panel;
+    }
+    
+    // READMISSION RECORDS section UI (static sample content)
+    private JPanel createReadmissionSection() {
+        JPanel section = new JPanel(new BorderLayout());
+        section.setBackground(Color.WHITE);
+        
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(new Color(13, 37, 73));
+        header.setPreferredSize(new Dimension(0, 38));
+        header.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+        JLabel title = new JLabel("READMISSION RECORDS");
+        title.setForeground(Color.WHITE);
+        title.setFont(new Font("Arial", Font.BOLD, 13));
+        header.add(title, BorderLayout.WEST);
+        section.add(header, BorderLayout.NORTH);
+        
+        String[] cols = {"Date Readmitted", "Date Absent", "Status", "Reason / Detail", "Remarks"};
+        Object[][] rows = {
+                {"SEP-04-2025", "SEP-03-2025", "Excused",
+                        "SICKNESS - LBM/ STOMACH ACHE/ ACUTE GASTROENTERITIS",
+                        "W/ MEDCERT ACUTE GASTRO, ALL SUBJECTS"}
         };
-
-        DefaultTableModel attendanceModel = new DefaultTableModel(data, columnNames) {
+        
+        DefaultTableModel model = new DefaultTableModel(rows, cols) {
+            public boolean isCellEditable(int r, int c) { return false; }
+        };
+        JTable table = new JTable(model);
+        table.setRowHeight(26);
+        table.getTableHeader().setReorderingAllowed(false);
+        section.add(new JScrollPane(table), BorderLayout.CENTER);
+        
+        return section;
+    }
+    
+    // Course-specific section with selectable dates and "Apply Reason..." button
+    private JPanel createCourseAbsenceSection(CourseScheduleItem course, java.util.List<AbsenceTardyRecord> records) {
+        JPanel section = new JPanel(new BorderLayout());
+        section.setBackground(Color.WHITE);
+        section.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        
+        // Header styled like the screenshot
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(new Color(13, 37, 73));
+        header.setPreferredSize(new Dimension(0, 36));
+        header.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+        
+        String headerText = course.classCode + " - " + course.courseNumber + " (" + course.courseDescription + ")";
+        JLabel title = new JLabel(headerText);
+        title.setForeground(Color.WHITE);
+        title.setFont(new Font("Arial", Font.BOLD, 12));
+        header.add(title, BorderLayout.WEST);
+        section.add(header, BorderLayout.NORTH);
+        
+        // Table with checkboxes
+        String[] cols = {"Select", "Date of absence/tardy", "Date Dropped", "Date Claimed", "Remarks", "Type"};
+        DefaultTableModel model = new DefaultTableModel(cols, 0) {
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return columnIndex == 0 ? Boolean.class : String.class;
+            }
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Make all cells non-editable
+                return column == 0; // only checkbox editable
             }
         };
-        JTable attendanceTable = new JTable(attendanceModel);
-        attendanceTable.setRowHeight(25);
-        attendanceTable.getTableHeader().setReorderingAllowed(false); // Disable column reordering
-        attendanceTable.setAutoCreateRowSorter(false); // Disable sorting
-        JScrollPane scrollPane = new JScrollPane(attendanceTable);
-
-        attendancePanel.add(scrollPane, BorderLayout.CENTER);
-        return attendancePanel;
+        
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("MMM-dd-yyyy");
+        for (AbsenceTardyRecord r : records) {
+            String dateStr = r.date.format(fmt).toUpperCase();
+            model.addRow(new Object[]{false, dateStr, "", "", r.remarks == null ? "" : r.remarks, r.type});
+        }
+        
+        JTable table = new JTable(model);
+        table.setRowHeight(24);
+        table.getTableHeader().setReorderingAllowed(false);
+        
+        JScrollPane tableScroll = new JScrollPane(table);
+        section.add(tableScroll, BorderLayout.CENTER);
+        
+        // Apply Reason button
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton applyBtn = new JButton("✎ Apply Reason of absence/tardy from the selected date/s");
+        actionPanel.add(applyBtn);
+        section.add(actionPanel, BorderLayout.SOUTH);
+        
+        applyBtn.addActionListener(e -> {
+            java.util.List<Integer> selectedRowIndexes = new java.util.ArrayList<>();
+            java.util.List<String> selectedDates = new java.util.ArrayList<>();
+            for (int i = 0; i < model.getRowCount(); i++) {
+                Object val = model.getValueAt(i, 0);
+                if (val instanceof Boolean && (Boolean) val) {
+                    selectedRowIndexes.add(i);
+                    selectedDates.add(String.valueOf(model.getValueAt(i, 1)));
+                }
+            }
+            if (selectedRowIndexes.isEmpty()) {
+                showNoSelectionDialog();
+                return;
+            }
+            showReasonDialog(course.classCode, selectedDates, reasonText -> {
+                // Update the Remarks column for selected rows
+                for (int idx : selectedRowIndexes) {
+                    model.setValueAt(reasonText, idx, 4);
+                }
+                // BACKEND HOOK (Faculty side):
+                // Persist the reason for the student + course + date(s) to your storage
+                // when you implement faculty marking. Remove this comment and call your service method here.
+            });
+        });
+        
+        return section;
+    }
+    
+    // Lightweight dialog for entering a reason; returns text via callback when submitted
+    private void showReasonDialog(String classCode, java.util.List<String> selectedDates, java.util.function.Consumer<String> onSubmit) {
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this.contentPanel), "Reason/s of absences/tardiness in class: (" + classCode + ")", Dialog.ModalityType.APPLICATION_MODAL);
+        dialog.setLayout(new BorderLayout());
+        
+        JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+        container.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Selected dates section
+        JPanel selectedHeader = new JPanel(new BorderLayout());
+        selectedHeader.setBackground(new Color(13, 37, 73));
+        selectedHeader.setPreferredSize(new Dimension(0, 36));
+        selectedHeader.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+        JLabel selectedTitle = new JLabel("Selected Date of absences/tardiness");
+        selectedTitle.setForeground(Color.WHITE);
+        selectedTitle.setFont(new Font("Arial", Font.BOLD, 12));
+        selectedHeader.add(selectedTitle, BorderLayout.WEST);
+        container.add(selectedHeader);
+        
+        JPanel selectedBody = new JPanel(new BorderLayout());
+        JList<String> dateList = new JList<>(selectedDates.toArray(new String[0]));
+        selectedBody.add(new JScrollPane(dateList), BorderLayout.CENTER);
+        container.add(selectedBody);
+        
+        // Reason section
+        container.add(Box.createVerticalStrut(10));
+        JPanel reasonHeader = new JPanel(new BorderLayout());
+        reasonHeader.setBackground(new Color(13, 37, 73));
+        reasonHeader.setPreferredSize(new Dimension(0, 36));
+        reasonHeader.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+        JLabel reasonTitle = new JLabel("Enter your reason");
+        reasonTitle.setForeground(Color.WHITE);
+        reasonTitle.setFont(new Font("Arial", Font.BOLD, 12));
+        reasonHeader.add(reasonTitle, BorderLayout.WEST);
+        container.add(reasonHeader);
+        
+        JTextArea reasonArea = new JTextArea(5, 32);
+        JScrollPane reasonScroll = new JScrollPane(reasonArea);
+        container.add(reasonScroll);
+        
+        JPanel submitPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton submit = new JButton("Submit");
+        submitPanel.add(submit);
+        container.add(submitPanel);
+        
+        submit.addActionListener(ev -> {
+            String text = reasonArea.getText().trim();
+            if (text.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Please enter a reason.", "Validation", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (onSubmit != null) onSubmit.accept(text);
+            dialog.dispose();
+        });
+        
+        dialog.add(container, BorderLayout.CENTER);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this.contentPanel);
+        dialog.setVisible(true);
+    }
+    
+    // "Ooops!" dialog when no dates are selected
+    private void showNoSelectionDialog() {
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this.contentPanel), "Reason/s of absences/tardiness in class", Dialog.ModalityType.APPLICATION_MODAL);
+        dialog.setLayout(new BorderLayout());
+        
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(new Color(13, 37, 73));
+        header.setPreferredSize(new Dimension(0, 36));
+        header.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+        JLabel title = new JLabel("Reason/s of absences/tardiness in class");
+        title.setForeground(Color.WHITE);
+        title.setFont(new Font("Arial", Font.BOLD, 12));
+        header.add(title, BorderLayout.WEST);
+        
+        JPanel body = new JPanel(new GridBagLayout());
+        JLabel oops = new JLabel("Ooops!");
+        oops.setFont(new Font("Arial", Font.BOLD, 48));
+        JLabel msg = new JLabel("Please select date/s of absence/tardy.");
+        msg.setFont(new Font("Arial", Font.PLAIN, 16));
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridy = 0; body.add(oops, gbc);
+        gbc.gridy = 1; gbc.insets = new Insets(10,0,0,0); body.add(msg, gbc);
+        
+        dialog.add(header, BorderLayout.NORTH);
+        dialog.add(body, BorderLayout.CENTER);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this.contentPanel);
+        dialog.setVisible(true);
     }
     // method for Personal Details Content
     private void showPersonalDetailsContent(MySinglyLinkedList<String> subItems) {
