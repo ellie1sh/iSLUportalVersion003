@@ -1,6 +1,7 @@
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -617,68 +618,236 @@ public class ISLUStudentPortal extends JFrame {
     }
     //method for Schedule Content
     private JPanel showScheduleContent(MySinglyLinkedList<String> subItems) {
-        JPanel schedulePanel = new JPanel(new BorderLayout());
-        schedulePanel.setBorder(BorderFactory.createTitledBorder(subItems.toString()));
-
-        // Header with student and semester info
-        JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(Color.WHITE);
-        header.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        JLabel left = new JLabel(studentName + " (" + studentID + ")");
-        left.setFont(new Font("Arial", Font.BOLD, 14));
-        JLabel right = new JLabel(semester);
-        right.setFont(new Font("Arial", Font.PLAIN, 12));
-        header.add(left, BorderLayout.WEST);
-        header.add(right, BorderLayout.EAST);
-        schedulePanel.add(header, BorderLayout.NORTH);
-
-        // Build dynamic schedule from provided course list equivalent
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(new Color(240, 240, 240));
+        
+        // Create main content panel
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.setBackground(Color.WHITE);
+        contentPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(15, 15, 15, 15)
+        ));
+        
+        // Header panel with title
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(new Color(13, 37, 73));
+        headerPanel.setPreferredSize(new Dimension(0, 50));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        
+        JLabel titleLabel = new JLabel("📅 CLASS SCHEDULE");
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+        
+        contentPanel.add(headerPanel, BorderLayout.NORTH);
+        
+        // Create tabbed pane for class schedule and weekly view
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setBackground(Color.WHITE);
+        
+        // Class Schedule Table Tab
+        JPanel classSchedulePanel = createClassScheduleTable();
+        tabbedPane.addTab("Class Schedule", classSchedulePanel);
+        
+        // Weekly View Tab
+        JPanel weeklyViewPanel = createWeeklyViewTable();
+        tabbedPane.addTab("Weekly View", weeklyViewPanel);
+        
+        contentPanel.add(tabbedPane, BorderLayout.CENTER);
+        mainPanel.add(contentPanel, BorderLayout.CENTER);
+        
+        return mainPanel;
+    }
+    
+    private JPanel createClassScheduleTable() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        
+        // Get course data
         List<CourseScheduleItem> courses = getSampleCourses();
         int totalUnits = courses.stream().mapToInt(c -> c.units).sum();
-
-        // Time slots (30-minute increments) based on min/max course times
-        LocalTime minStart = courses.stream().map(c -> c.startTime).min(LocalTime::compareTo).orElse(LocalTime.of(8, 0));
-        LocalTime maxEnd = courses.stream().map(c -> c.endTime).max(LocalTime::compareTo).orElse(LocalTime.of(18, 0));
-        minStart = roundDownToHalfHour(minStart);
-        maxEnd = roundUpToHalfHour(maxEnd);
-
-        // Column names from subItems
-        String[] columnNames = {"","Time", "Monday","Tuesday","Wednesday","Thursday","Friday"};
-
-        // Build data rows
-        List<Object[]> rows = new ArrayList<>();
-        for (LocalTime slot = minStart; slot.isBefore(maxEnd); slot = slot.plusMinutes(30)) {
-            LocalTime next = slot.plusMinutes(30);
-            Object[] row = new Object[columnNames.length];
-            row[0] = formatTimeRange(slot, next);
-            row[1] = courseLabelAtTime(courses, slot, "M");
-            row[2] = courseLabelAtTime(courses, slot, "T");
-            row[3] = courseLabelAtTime(courses, slot, "W");
-            row[4] = courseLabelAtTime(courses, slot, "TH");
-            row[5] = courseLabelAtTime(courses, slot, "F");
-            row[6] = courseLabelAtTime(courses, slot, "S");
-            rows.add(row);
+        
+        // Create table with proper columns matching the image
+        String[] columnNames = {"Class Code", "Course Number", "Course Description", "Units", "Schedule", "Days", "Room", "Module"};
+        
+        // Build table data
+        Object[][] data = new Object[courses.size()][columnNames.length];
+        for (int i = 0; i < courses.size(); i++) {
+            CourseScheduleItem course = courses.get(i);
+            data[i][0] = course.classCode;
+            data[i][1] = course.courseNumber;
+            data[i][2] = course.courseDescription;
+            data[i][3] = course.units;
+            data[i][4] = formatTime(course.startTime) + " - " + formatTime(course.endTime);
+            data[i][5] = course.days;
+            data[i][6] = course.room;
+            data[i][7] = getModuleFromRoom(course.room); // Extract module from room
         }
-
-        DefaultTableModel scheduleModel = new DefaultTableModel(rows.toArray(new Object[0][]), columnNames) {
+        
+        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
-        JTable scheduleTable = new JTable(scheduleModel);
-        scheduleTable.setRowHeight(28);
-        scheduleTable.getTableHeader().setReorderingAllowed(false);
-        scheduleTable.setAutoCreateRowSorter(false);
-        JScrollPane scrollPane = new JScrollPane(scheduleTable);
-        schedulePanel.add(scrollPane, BorderLayout.CENTER);
-
-        // Footer with total units
-        JLabel footer = new JLabel("Total Units: " + totalUnits);
-        footer.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
-        schedulePanel.add(footer, BorderLayout.SOUTH);
-
-        return schedulePanel;
+        
+        JTable table = new JTable(model);
+        table.setRowHeight(25);
+        table.setFont(new Font("Arial", Font.PLAIN, 12));
+        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
+        table.getTableHeader().setBackground(new Color(240, 240, 240));
+        table.getTableHeader().setReorderingAllowed(false);
+        table.setAutoCreateRowSorter(false);
+        table.setGridColor(new Color(220, 220, 220));
+        table.setShowGrid(true);
+        table.setSelectionBackground(new Color(230, 240, 255));
+        
+        // Set column widths
+        table.getColumnModel().getColumn(0).setPreferredWidth(80);  // Class Code
+        table.getColumnModel().getColumn(1).setPreferredWidth(100); // Course Number
+        table.getColumnModel().getColumn(2).setPreferredWidth(300); // Course Description
+        table.getColumnModel().getColumn(3).setPreferredWidth(50);  // Units
+        table.getColumnModel().getColumn(4).setPreferredWidth(120); // Schedule
+        table.getColumnModel().getColumn(5).setPreferredWidth(80);  // Days
+        table.getColumnModel().getColumn(6).setPreferredWidth(80);  // Room
+        table.getColumnModel().getColumn(7).setPreferredWidth(80);  // Module
+        
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Footer with total units and block info
+        JPanel footerPanel = new JPanel(new BorderLayout());
+        footerPanel.setBackground(Color.WHITE);
+        footerPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        
+        JLabel unitsLabel = new JLabel("Total Units: " + totalUnits);
+        unitsLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        footerPanel.add(unitsLabel, BorderLayout.WEST);
+        
+        JLabel blockLabel = new JLabel("BLOCK: BSIT 2-3");
+        blockLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        blockLabel.setForeground(new Color(100, 100, 100));
+        footerPanel.add(blockLabel, BorderLayout.EAST);
+        
+        panel.add(footerPanel, BorderLayout.SOUTH);
+        
+        return panel;
+    }
+    
+    private JPanel createWeeklyViewTable() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        
+        // Get course data
+        List<CourseScheduleItem> courses = getSampleCourses();
+        
+        // Time slots (30-minute increments) based on min/max course times
+        LocalTime minStart = courses.stream().map(c -> c.startTime).min(LocalTime::compareTo).orElse(LocalTime.of(7, 0));
+        LocalTime maxEnd = courses.stream().map(c -> c.endTime).max(LocalTime::compareTo).orElse(LocalTime.of(18, 0));
+        minStart = roundDownToHalfHour(minStart);
+        maxEnd = roundUpToHalfHour(maxEnd);
+        
+        // Create weekly view table
+        String[] columnNames = {"", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+        
+        // Build data rows for weekly view
+        List<Object[]> rows = new ArrayList<>();
+        
+        // Add "all-day" row
+        Object[] allDayRow = new Object[columnNames.length];
+        allDayRow[0] = "all-day";
+        for (int i = 1; i < columnNames.length; i++) {
+            allDayRow[i] = "";
+        }
+        rows.add(allDayRow);
+        
+        // Add time slots
+        for (LocalTime slot = minStart; slot.isBefore(maxEnd); slot = slot.plusMinutes(60)) { // 1-hour increments for better visibility
+            Object[] row = new Object[columnNames.length];
+            row[0] = formatTime(slot);
+            row[1] = ""; // Sunday
+            row[2] = getWeeklyCourseLabelAtTime(courses, slot, "M");  // Monday
+            row[3] = getWeeklyCourseLabelAtTime(courses, slot, "T");  // Tuesday
+            row[4] = getWeeklyCourseLabelAtTime(courses, slot, "W");  // Wednesday
+            row[5] = getWeeklyCourseLabelAtTime(courses, slot, "TH"); // Thursday
+            row[6] = getWeeklyCourseLabelAtTime(courses, slot, "F");  // Friday
+            row[7] = ""; // Saturday
+            rows.add(row);
+        }
+        
+        DefaultTableModel weeklyModel = new DefaultTableModel(rows.toArray(new Object[0][]), columnNames) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        
+        JTable weeklyTable = new JTable(weeklyModel);
+        weeklyTable.setRowHeight(40);
+        weeklyTable.setFont(new Font("Arial", Font.PLAIN, 11));
+        weeklyTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
+        weeklyTable.getTableHeader().setBackground(new Color(240, 240, 240));
+        weeklyTable.getTableHeader().setReorderingAllowed(false);
+        weeklyTable.setAutoCreateRowSorter(false);
+        weeklyTable.setGridColor(new Color(220, 220, 220));
+        weeklyTable.setShowGrid(true);
+        
+        // Set column widths for weekly view
+        weeklyTable.getColumnModel().getColumn(0).setPreferredWidth(80);  // Time
+        for (int i = 1; i < columnNames.length; i++) {
+            weeklyTable.getColumnModel().getColumn(i).setPreferredWidth(120); // Days
+        }
+        
+        // Custom cell renderer for course blocks
+        weeklyTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, 
+                    boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                
+                if (value != null && !value.toString().isEmpty() && column > 0) {
+                    // Color course blocks
+                    c.setBackground(new Color(70, 130, 180, 100)); // Semi-transparent blue
+                    setForeground(Color.BLACK);
+                    setHorizontalAlignment(SwingConstants.CENTER);
+                } else if (column == 0) {
+                    // Time column
+                    c.setBackground(new Color(245, 245, 245));
+                    setForeground(Color.BLACK);
+                    setHorizontalAlignment(SwingConstants.CENTER);
+                } else {
+                    c.setBackground(Color.WHITE);
+                    setForeground(Color.BLACK);
+                }
+                
+                return c;
+            }
+        });
+        
+        JScrollPane weeklyScrollPane = new JScrollPane(weeklyTable);
+        weeklyScrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+        panel.add(weeklyScrollPane, BorderLayout.CENTER);
+        
+        return panel;
+    }
+    
+    private String getWeeklyCourseLabelAtTime(List<CourseScheduleItem> courses, LocalTime slot, String day) {
+        for (CourseScheduleItem c : courses) {
+            if (c.occursOn(day) && !slot.isBefore(c.startTime) && slot.isBefore(c.endTime)) {
+                return "<html><center>" + c.courseNumber + "<br>(" + c.room + ")</center></html>";
+            }
+        }
+        return "";
+    }
+    
+    private String getModuleFromRoom(String room) {
+        if (room == null || room.isEmpty()) return "";
+        // Extract first character/letter from room as module
+        return room.substring(0, 1);
     }
 
     private String courseLabelAtTime(List<CourseScheduleItem> courses, LocalTime slot, String day) {
@@ -775,7 +944,7 @@ public class ISLUStudentPortal extends JFrame {
     private List<CourseScheduleItem> getSampleCourses() {
         if (sampleCourses == null) {
             sampleCourses = new ArrayList<>();
-            // Sample data adapted from provided list
+            // Sample data matching the image provided
             sampleCourses.add(new CourseScheduleItem("7024", "NSTP-CWTS 1", "FOUNDATIONS OF SERVICE", 3,
                     LocalTime.of(13, 30), LocalTime.of(14, 30), "MWF", "D906"));
             sampleCourses.add(new CourseScheduleItem("9454", "GSTS", "SCIENCE, TECHNOLOGY, AND SOCIETY", 3,
