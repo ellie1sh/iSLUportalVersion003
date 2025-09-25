@@ -1815,12 +1815,19 @@ public class ISLUStudentPortal extends JFrame {
         
         // Get student info from database
         StudentInfo studentInfo = DataManager.getStudentInfo(studentID);
-        String accountName = studentInfo != null ? studentInfo.getFullName() : "SHERLLE O. RIVERA";
+        String accountName = studentInfo != null ? studentInfo.getFullName() : "N/A";
         
-        // Add account details with proper styling to match image
+        // Get registration date from database or use a generic message
+        String registrationDate = "N/A"; // Default if no data available
+        if (studentInfo != null) {
+            // You could add a registration date field to StudentInfo class if needed
+            registrationDate = "Available in Database"; // Placeholder - can be enhanced
+        }
+        
+        // Add account details using actual database data
         addPersonalDetailRow(accountInfoPanel, "User ID/Login ID:", studentID);
         addPersonalDetailRow(accountInfoPanel, "Account Name:", accountName);
-        addPersonalDetailRow(accountInfoPanel, "Date Registered:", "August 06, 2024");
+        addPersonalDetailRow(accountInfoPanel, "Date Registered:", registrationDate);
         addPersonalDetailRow(accountInfoPanel, "Account Type:", "Student");
         
         rightPanel.add(accountInfoPanel);
@@ -2124,23 +2131,23 @@ public class ISLUStudentPortal extends JFrame {
         
         // General Information section
         JPanel generalInfoPanel = createImageStyledSectionPanel("GENERAL INFORMATION");
-        addPersonalDetailRow(generalInfoPanel, "Gender:", profileData != null ? profileData.getGender() : "FEMALE");
+        addPersonalDetailRow(generalInfoPanel, "Gender:", profileData != null ? profileData.getGender() : "N/A");
         addPersonalDetailRow(generalInfoPanel, "Birthday:", birthday);
-        addPersonalDetailRow(generalInfoPanel, "Citizenship:", profileData != null ? profileData.getCitizenship() : "FILIPINO");
-        addPersonalDetailRow(generalInfoPanel, "Religion:", profileData != null ? profileData.getReligion() : "ROMAN CATHOLIC");
-        addPersonalDetailRow(generalInfoPanel, "Civil Status:", profileData != null ? profileData.getCivilStatus() : "SINGLE");
-        addPersonalDetailRow(generalInfoPanel, "Birthplace:", profileData != null ? profileData.getBirthplace() : "BAGUIO CITY");
-        addPersonalDetailRow(generalInfoPanel, "Nationality:", profileData != null ? profileData.getNationality() : "FILIPINO");
+        addPersonalDetailRow(generalInfoPanel, "Citizenship:", profileData != null ? profileData.getCitizenship() : "N/A");
+        addPersonalDetailRow(generalInfoPanel, "Religion:", profileData != null ? profileData.getReligion() : "N/A");
+        addPersonalDetailRow(generalInfoPanel, "Civil Status:", profileData != null ? profileData.getCivilStatus() : "N/A");
+        addPersonalDetailRow(generalInfoPanel, "Birthplace:", profileData != null ? profileData.getBirthplace() : "N/A");
+        addPersonalDetailRow(generalInfoPanel, "Nationality:", profileData != null ? profileData.getNationality() : "N/A");
         parentPanel.add(generalInfoPanel);
         parentPanel.add(Box.createVerticalStrut(20));
         
         // Contact Information section
         JPanel contactInfoPanel = createImageStyledSectionPanel("CONTACT INFORMATION");
-        addPersonalDetailRow(contactInfoPanel, "Home Address:", profileData != null ? profileData.getHomeAddress() : "GUSARAN, CAMP 6, TUBA, BENGUET");
+        addPersonalDetailRow(contactInfoPanel, "Home Address:", profileData != null ? profileData.getHomeAddress() : "N/A");
         addPersonalDetailRow(contactInfoPanel, "Home Telephone No:", profileData != null ? profileData.getHomeTel() : "N/A");
-        addPersonalDetailRow(contactInfoPanel, "Baguio Address:", profileData != null ? profileData.getBaguioAddress() : "GUSARAN, CAMP 6, TUBA");
+        addPersonalDetailRow(contactInfoPanel, "Baguio Address:", profileData != null ? profileData.getBaguioAddress() : "N/A");
         addPersonalDetailRow(contactInfoPanel, "Baguio Telephone No:", profileData != null ? profileData.getBaguioTel() : "N/A");
-        addPersonalDetailRow(contactInfoPanel, "Cellphone No:", profileData != null ? profileData.getCellphone() : "09665295444");
+        addPersonalDetailRow(contactInfoPanel, "Cellphone No:", profileData != null ? profileData.getCellphone() : "N/A");
         addPersonalDetailRow(contactInfoPanel, "Email Address:", email);
         parentPanel.add(contactInfoPanel);
         parentPanel.add(Box.createVerticalStrut(20));
@@ -2154,10 +2161,10 @@ public class ISLUStudentPortal extends JFrame {
         parentsLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 5, 20));
         contactPersonsPanel.add(parentsLabel);
         
-        addPersonalDetailRow(contactPersonsPanel, "Father's Name:", profileData != null ? profileData.getFatherName() : "WELJE E. RIVERA");
-        addPersonalDetailRow(contactPersonsPanel, "Occupation:", profileData != null ? profileData.getFatherOcc() : "LABORER");
-        addPersonalDetailRow(contactPersonsPanel, "Mother's Maiden Name:", profileData != null ? profileData.getMotherName() : "JULIE ANNE L. OBILLE");
-        addPersonalDetailRow(contactPersonsPanel, "Occupation:", profileData != null ? profileData.getMotherOcc() : "HOUSEWIFE");
+        addPersonalDetailRow(contactPersonsPanel, "Father's Name:", profileData != null ? profileData.getFatherName() : "N/A");
+        addPersonalDetailRow(contactPersonsPanel, "Occupation:", profileData != null ? profileData.getFatherOcc() : "N/A");
+        addPersonalDetailRow(contactPersonsPanel, "Mother's Maiden Name:", profileData != null ? profileData.getMotherName() : "N/A");
+        addPersonalDetailRow(contactPersonsPanel, "Occupation:", profileData != null ? profileData.getMotherOcc() : "N/A");
         
         parentPanel.add(contactPersonsPanel);
         
@@ -4083,40 +4090,40 @@ public class ISLUStudentPortal extends JFrame {
  * Data class to hold parsed profile information
  */
 class ProfileData {
-    String gender = "Male";
-    String citizenship = "Filipino";
-    String religion = "Roman Catholic";
-    String civilStatus = "Single";
-    String birthplace = "None";
-    String nationality = "Filipino";
-    String homeAddress = "None";
-    String homeTel = "None";
-    String baguioAddress = "None";
-    String baguioTel = "None";
-    String cellphone = "None";
-    String fatherName = "None";
-    String fatherOcc = "None";
-    String motherName = "None";
-    String motherOcc = "None";
-    String guardianName = "None";
-    String guardianAddress = "None";
+    String gender = "";
+    String citizenship = "";
+    String religion = "";
+    String civilStatus = "";
+    String birthplace = "";
+    String nationality = "";
+    String homeAddress = "";
+    String homeTel = "";
+    String baguioAddress = "";
+    String baguioTel = "";
+    String cellphone = "";
+    String fatherName = "";
+    String fatherOcc = "";
+    String motherName = "";
+    String motherOcc = "";
+    String guardianName = "";
+    String guardianAddress = "";
     
-    // Getter methods
-    public String getGender() { return gender; }
-    public String getCitizenship() { return citizenship; }
-    public String getReligion() { return religion; }
-    public String getCivilStatus() { return civilStatus; }
-    public String getBirthplace() { return birthplace; }
-    public String getNationality() { return nationality; }
-    public String getHomeAddress() { return homeAddress; }
-    public String getHomeTel() { return homeTel; }
-    public String getBaguioAddress() { return baguioAddress; }
-    public String getBaguioTel() { return baguioTel; }
-    public String getCellphone() { return cellphone; }
-    public String getFatherName() { return fatherName; }
-    public String getFatherOcc() { return fatherOcc; }
-    public String getMotherName() { return motherName; }
-    public String getMotherOcc() { return motherOcc; }
-    public String getGuardianName() { return guardianName; }
-    public String getGuardianAddress() { return guardianAddress; }
+    // Getter methods with proper null/empty handling
+    public String getGender() { return (gender != null && !gender.trim().isEmpty()) ? gender : "N/A"; }
+    public String getCitizenship() { return (citizenship != null && !citizenship.trim().isEmpty()) ? citizenship : "N/A"; }
+    public String getReligion() { return (religion != null && !religion.trim().isEmpty()) ? religion : "N/A"; }
+    public String getCivilStatus() { return (civilStatus != null && !civilStatus.trim().isEmpty()) ? civilStatus : "N/A"; }
+    public String getBirthplace() { return (birthplace != null && !birthplace.trim().isEmpty()) ? birthplace : "N/A"; }
+    public String getNationality() { return (nationality != null && !nationality.trim().isEmpty()) ? nationality : "N/A"; }
+    public String getHomeAddress() { return (homeAddress != null && !homeAddress.trim().isEmpty()) ? homeAddress : "N/A"; }
+    public String getHomeTel() { return (homeTel != null && !homeTel.trim().isEmpty()) ? homeTel : "N/A"; }
+    public String getBaguioAddress() { return (baguioAddress != null && !baguioAddress.trim().isEmpty()) ? baguioAddress : "N/A"; }
+    public String getBaguioTel() { return (baguioTel != null && !baguioTel.trim().isEmpty()) ? baguioTel : "N/A"; }
+    public String getCellphone() { return (cellphone != null && !cellphone.trim().isEmpty()) ? cellphone : "N/A"; }
+    public String getFatherName() { return (fatherName != null && !fatherName.trim().isEmpty()) ? fatherName : "N/A"; }
+    public String getFatherOcc() { return (fatherOcc != null && !fatherOcc.trim().isEmpty()) ? fatherOcc : "N/A"; }
+    public String getMotherName() { return (motherName != null && !motherName.trim().isEmpty()) ? motherName : "N/A"; }
+    public String getMotherOcc() { return (motherOcc != null && !motherOcc.trim().isEmpty()) ? motherOcc : "N/A"; }
+    public String getGuardianName() { return (guardianName != null && !guardianName.trim().isEmpty()) ? guardianName : "N/A"; }
+    public String getGuardianAddress() { return (guardianAddress != null && !guardianAddress.trim().isEmpty()) ? guardianAddress : "N/A"; }
 }
