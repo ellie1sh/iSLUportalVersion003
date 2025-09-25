@@ -1796,32 +1796,6 @@ public class ISLUStudentPortal extends JFrame {
         rightPanel.setBackground(Color.WHITE);
         rightPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
-        // Add refresh button
-        JPanel refreshPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        refreshPanel.setBackground(Color.WHITE);
-        JButton refreshButton = new JButton("🔄 Refresh Data");
-        refreshButton.setFont(new Font("Arial", Font.PLAIN, 11));
-        refreshButton.setBackground(new Color(13, 37, 73));
-        refreshButton.setForeground(Color.WHITE);
-        refreshButton.setFocusPainted(false);
-        refreshButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        refreshButton.addActionListener(e -> {
-            refreshButton.setText("🔄 Refreshing...");
-            refreshButton.setEnabled(false);
-            SwingUtilities.invokeLater(() -> {
-                showAccountInfo();
-                // Reset button text after a short delay to show the refresh completed
-                Timer resetTimer = new Timer(500, resetEvent -> {
-                    refreshButton.setText("🔄 Refresh Data");
-                    refreshButton.setEnabled(true);
-                });
-                resetTimer.setRepeats(false);
-                resetTimer.start();
-            });
-        });
-        refreshPanel.add(refreshButton);
-        rightPanel.add(refreshPanel);
-        
         // Create account information section with image styling
         JPanel accountInfoPanel = createImageStyledSectionPanel("ACCOUNT INFORMATION");
         
@@ -2093,32 +2067,6 @@ public class ISLUStudentPortal extends JFrame {
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
         rightPanel.setBackground(Color.WHITE);
         rightPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        
-        // Add refresh button
-        JPanel refreshPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        refreshPanel.setBackground(Color.WHITE);
-        JButton refreshButton = new JButton("🔄 Refresh Data");
-        refreshButton.setFont(new Font("Arial", Font.PLAIN, 11));
-        refreshButton.setBackground(new Color(13, 37, 73));
-        refreshButton.setForeground(Color.WHITE);
-        refreshButton.setFocusPainted(false);
-        refreshButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        refreshButton.addActionListener(e -> {
-            refreshButton.setText("🔄 Refreshing...");
-            refreshButton.setEnabled(false);
-            SwingUtilities.invokeLater(() -> {
-                showPersonalDetailsInRightPanel();
-                // Reset button text after a short delay to show the refresh completed
-                Timer resetTimer = new Timer(500, resetEvent -> {
-                    refreshButton.setText("🔄 Refresh Data");
-                    refreshButton.setEnabled(true);
-                });
-                resetTimer.setRepeats(false);
-                resetTimer.start();
-            });
-        });
-        refreshPanel.add(refreshButton);
-        rightPanel.add(refreshPanel);
         
         // Create scrollable content for personal details
         JPanel personalDetailsContent = new JPanel();
