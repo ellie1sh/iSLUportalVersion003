@@ -29,6 +29,10 @@ public class ISLUStudentPortal extends JFrame {
     private CardLayout mainCardLayout;
     private MyDoublyLinkedList<MenuItem> menu;
 
+    // References for the User Profile (Personal Details) view so the left panel persists
+    private JPanel profileMainContentPanel; // hosts left sidebar and the dynamic right panel
+    private JPanel profileLeftPanel;        // left sidebar with profile icon and buttons
+
     // Student data
     private String studentID;
     private String studentName;
@@ -1543,15 +1547,15 @@ public class ISLUStudentPortal extends JFrame {
         profilePanel.add(headerPanel, BorderLayout.NORTH);
         
         // Main content area with two columns
-        JPanel mainContentPanel = new JPanel(new BorderLayout());
-        mainContentPanel.setBackground(Color.WHITE);
-        mainContentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        profileMainContentPanel = new JPanel(new BorderLayout());
+        profileMainContentPanel.setBackground(Color.WHITE);
+        profileMainContentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
         // Left side - Profile picture and action buttons
-        JPanel leftPanel = new JPanel();
-        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
-        leftPanel.setBackground(Color.WHITE);
-        leftPanel.setPreferredSize(new Dimension(200, 0));
+        profileLeftPanel = new JPanel();
+        profileLeftPanel.setLayout(new BoxLayout(profileLeftPanel, BoxLayout.Y_AXIS));
+        profileLeftPanel.setBackground(Color.WHITE);
+        profileLeftPanel.setPreferredSize(new Dimension(200, 0));
         
         // Profile picture placeholder
         JLabel profilePicture = new JLabel();
@@ -1562,9 +1566,9 @@ public class ISLUStudentPortal extends JFrame {
         profilePicture.setMaximumSize(new Dimension(150, 150));
         profilePicture.setMinimumSize(new Dimension(150, 150));
         
-        leftPanel.add(Box.createVerticalStrut(20));
-        leftPanel.add(profilePicture);
-        leftPanel.add(Box.createVerticalStrut(20));
+        profileLeftPanel.add(Box.createVerticalStrut(20));
+        profileLeftPanel.add(profilePicture);
+        profileLeftPanel.add(Box.createVerticalStrut(20));
         
         // Action buttons - styled to match the design
         JButton personalDetailsBtn = new JButton("Personal Details");
@@ -1646,12 +1650,12 @@ public class ISLUStudentPortal extends JFrame {
             showPasswordChangeInRightPanel();
         });
         
-        leftPanel.add(personalDetailsBtn);
-        leftPanel.add(Box.createVerticalStrut(10));
-        leftPanel.add(accountInfoBtn);
-        leftPanel.add(Box.createVerticalStrut(10));
-        leftPanel.add(changePasswordBtn);
-        leftPanel.add(Box.createVerticalGlue());
+        profileLeftPanel.add(personalDetailsBtn);
+        profileLeftPanel.add(Box.createVerticalStrut(10));
+        profileLeftPanel.add(accountInfoBtn);
+        profileLeftPanel.add(Box.createVerticalStrut(10));
+        profileLeftPanel.add(changePasswordBtn);
+        profileLeftPanel.add(Box.createVerticalGlue());
         
         // Set Personal Details as the default selected button
         personalDetailsBtn.setBorder(BorderFactory.createCompoundBorder(
@@ -1659,14 +1663,14 @@ public class ISLUStudentPortal extends JFrame {
             BorderFactory.createEmptyBorder(6, 10, 6, 10)
         ));
         
-        mainContentPanel.add(leftPanel, BorderLayout.WEST);
+        profileMainContentPanel.add(profileLeftPanel, BorderLayout.WEST);
         
         // Show Personal Details by default
         SwingUtilities.invokeLater(() -> {
             showPersonalDetailsInRightPanel();
         });
         
-        profilePanel.add(mainContentPanel, BorderLayout.CENTER);
+        profilePanel.add(profileMainContentPanel, BorderLayout.CENTER);
         contentPanel.add(profilePanel, BorderLayout.CENTER);
         
         contentPanel.revalidate();
@@ -1782,9 +1786,10 @@ public class ISLUStudentPortal extends JFrame {
      * Shows the Account Information in the right panel
      */
     private void showAccountInfo() {
-        // Find the main content panel and update only the right side
-        JPanel mainContentPanel = (JPanel) contentPanel.getComponent(0);
-        
+        // Use the persistent profile container if available; otherwise fallback
+        JPanel mainContentPanel = profileMainContentPanel != null ? profileMainContentPanel
+                : (JPanel) contentPanel.getComponent(0);
+
         // Remove existing right panel if it exists
         if (mainContentPanel.getComponentCount() > 1) {
             mainContentPanel.remove(1);
@@ -1804,18 +1809,18 @@ public class ISLUStudentPortal extends JFrame {
         String accountName = studentInfo != null ? studentInfo.getFullName() : "SHERLLE O. RIVERA";
         
         // Add account details with proper styling to match image
-        addPersonalDetailRow(accountInfoPanel, "User ID/Login ID:", studentID);
-        addPersonalDetailRow(accountInfoPanel, "Account Name:", accountName);
-        addPersonalDetailRow(accountInfoPanel, "Date Registered:", "August 06, 2024");
-        addPersonalDetailRow(accountInfoPanel, "Account Type:", "Student");
+        addCleanAccountInfoRow(accountInfoPanel, "User ID/Login ID:", studentID);
+        addCleanAccountInfoRow(accountInfoPanel, "Account Name:", accountName);
+        addCleanAccountInfoRow(accountInfoPanel, "Date Registered:", "August 06, 2024");
+        addCleanAccountInfoRow(accountInfoPanel, "Account Type:", "Student");
         
         rightPanel.add(accountInfoPanel);
         
         // Add the new right panel to the main content panel
         mainContentPanel.add(rightPanel, BorderLayout.CENTER);
         
-        contentPanel.revalidate();
-        contentPanel.repaint();
+        mainContentPanel.revalidate();
+        mainContentPanel.repaint();
     }
     
     /**
@@ -1835,8 +1840,9 @@ public class ISLUStudentPortal extends JFrame {
      * Shows the Password Change form in the right panel
      */
     private void showPasswordChangeInRightPanel() {
-        // Find the main content panel and update only the right side
-        JPanel mainContentPanel = (JPanel) contentPanel.getComponent(0);
+        // Use the persistent profile container if available; otherwise fallback
+        JPanel mainContentPanel = profileMainContentPanel != null ? profileMainContentPanel
+                : (JPanel) contentPanel.getComponent(0);
         
         // Remove existing right panel if it exists
         if (mainContentPanel.getComponentCount() > 1) {
@@ -1985,9 +1991,9 @@ public class ISLUStudentPortal extends JFrame {
         
         // Add the new right panel to the main content panel
         mainContentPanel.add(rightPanel, BorderLayout.CENTER);
-        
-        contentPanel.revalidate();
-        contentPanel.repaint();
+
+        mainContentPanel.revalidate();
+        mainContentPanel.repaint();
     }
     
     /**
@@ -2054,8 +2060,9 @@ public class ISLUStudentPortal extends JFrame {
      * Shows the Personal Details in the right panel while keeping left panel intact
      */
     private void showPersonalDetailsInRightPanel() {
-        // Find the main content panel and update only the right side
-        JPanel mainContentPanel = (JPanel) contentPanel.getComponent(0);
+        // Use the persistent profile container if available; otherwise fallback
+        JPanel mainContentPanel = profileMainContentPanel != null ? profileMainContentPanel
+                : (JPanel) contentPanel.getComponent(0);
         
         // Remove existing right panel if it exists
         if (mainContentPanel.getComponentCount() > 1) {
@@ -2088,9 +2095,9 @@ public class ISLUStudentPortal extends JFrame {
         
         // Add the new right panel to the main content panel
         mainContentPanel.add(rightPanel, BorderLayout.CENTER);
-        
-        contentPanel.revalidate();
-        contentPanel.repaint();
+
+        mainContentPanel.revalidate();
+        mainContentPanel.repaint();
     }
     
     /**
