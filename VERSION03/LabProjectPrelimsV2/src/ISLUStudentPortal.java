@@ -635,8 +635,8 @@ public class ISLUStudentPortal extends JFrame {
         JPanel classScheduleSection = createClassScheduleSection();
         contentPanel.add(classScheduleSection);
         
-        // Add spacing between sections
-        contentPanel.add(Box.createVerticalStrut(20));
+        // Add minimal spacing between sections
+        contentPanel.add(Box.createVerticalStrut(5));
         
         // WEEKLY VIEW Section
         JPanel weeklyViewSection = createWeeklyViewSection();
@@ -762,7 +762,7 @@ public class ISLUStudentPortal extends JFrame {
         // Footer with total units and block info
         JPanel footerPanel = new JPanel(new BorderLayout());
         footerPanel.setBackground(Color.WHITE);
-        footerPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        footerPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
         
         JLabel unitsLabel = new JLabel("Total Units: " + totalUnits);
         unitsLabel.setFont(new Font("Arial", Font.BOLD, 12));
@@ -989,11 +989,11 @@ public class ISLUStudentPortal extends JFrame {
             sampleCourses.add(new CourseScheduleItem("7024", "NSTP-CWTS 1", "FOUNDATIONS OF SERVICE", 3,
                     LocalTime.of(13, 30), LocalTime.of(14, 30), "MWF", "D906"));
             sampleCourses.add(new CourseScheduleItem("9454", "GSTS", "SCIENCE, TECHNOLOGY, AND SOCIETY", 3,
-                    LocalTime.of(9, 30), LocalTime.of(10, 30), "TTHS", "D504"));
+                    LocalTime.of(9, 30), LocalTime.of(10, 30), "TThS", "D504"));
             sampleCourses.add(new CourseScheduleItem("9455", "GENVI", "ENVIRONMENTAL SCIENCE", 3,
                     LocalTime.of(9, 30), LocalTime.of(10, 30), "MWF", "D503"));
             sampleCourses.add(new CourseScheduleItem("9456", "CFE 103", "CATHOLIC FOUNDATION OF MISSION", 3,
-                    LocalTime.of(13, 30), LocalTime.of(14, 30), "TTHS", "D503"));
+                    LocalTime.of(13, 30), LocalTime.of(14, 30), "TThS", "D503"));
             sampleCourses.add(new CourseScheduleItem("9457", "IT 211", "REQUIREMENTS ANALYSIS AND MODELING", 3,
                     LocalTime.of(10, 30), LocalTime.of(11, 30), "MWF", "D511"));
             sampleCourses.add(new CourseScheduleItem("9458A", "IT 212", "DATA STRUCTURES (LEC)", 2,
