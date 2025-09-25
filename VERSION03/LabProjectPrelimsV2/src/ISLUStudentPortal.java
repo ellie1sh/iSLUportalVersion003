@@ -352,62 +352,145 @@ public class ISLUStudentPortal extends JFrame {
         contentPanel.add(statusPanel);
     }
 
-    // Method for the "Grade" sub-panels
-    private JPanel createGradesPanel(MySinglyLinkedList<String> subItems) {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(Color.WHITE);
+	// Method for the "Grade" sub-panels
+	private JPanel createGradesPanel(MySinglyLinkedList<String> subItems) {
+		JPanel rootPanel = new JPanel(new BorderLayout());
+		rootPanel.setBackground(Color.WHITE);
 
-        JLabel titleLabel = new JLabel(subItems.toString(), SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+		// Header title matching screenshot
+		JLabel titleLabel = new JLabel("Grades (FIRST SEMESTER, 2025-2026)", SwingConstants.LEFT);
+		titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+		titleLabel.setBorder(new EmptyBorder(12, 16, 12, 16));
+		rootPanel.add(titleLabel, BorderLayout.NORTH);
 
-        // Convert the LinkedList to a String array for JTable column headers
-        String[] columnNames ={"Subject", "Prelim Grade", "Midterm Grade","Tentative Final Grade","Final Grade"};
+		// Table setup similar to the screenshot columns
+		String[] columnNames = {
+			"Class Code",
+			"Course Number",
+			"Units",
+			"Prelim Grade",
+			"Midterm Grade",
+			"Tentative Final Grade",
+			"Final Grade",
+			"Weights"
+		};
 
-        // Create an empty data array
-        Object[][] data = new Object[0][columnNames.length];
+		DefaultTableModel model = new DefaultTableModel(columnNames, 0) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
 
-        DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // Make all cells non-editable
-            }
-        };
-        JTable table = new JTable(tableModel);
-        table.setPreferredSize(new Dimension(500, 300));
-        table.setFillsViewportHeight(true);
-        table.getTableHeader().setReorderingAllowed(false); // Disable column reordering
-        table.setAutoCreateRowSorter(false); // Disable sorting
+		JTable table = new JTable(model);
+		table.setFillsViewportHeight(true);
+		table.setRowHeight(26);
+		table.setShowGrid(true);
+		table.setGridColor(new Color(220, 220, 220));
+		table.getTableHeader().setReorderingAllowed(false);
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
-        // Populate the table with dummy data and calculate the final grade
-        // Note: The grades are now stored as numbers for calculation
-        Object[] grades1 = {"Intro to Programming", 90, 92, 91};
-        Object[] grades2 = {"Data Structures", 85, 88, 87};
-        Object[] grades3 = {"Algorithms", 95, 96, 95};
+		// Header styling
+		Font headerFont = new Font("Arial", Font.BOLD, 12);
+		table.getTableHeader().setFont(headerFont);
 
-        // Calculate the average for each set of grades
-        double average1 = (double) ((int) grades1[1] + (int) grades1[2] + (int) grades1[3]) / 3.0;
-        double average2 = (double) ((int) grades2[1] + (int) grades2[2] + (int) grades2[3]) / 3.0;
-        double average3 = (double) ((int) grades3[1] + (int) grades3[2] + (int) grades3[3]) / 3.0;
+		// Center alignment for numeric/text status columns
+		DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+		center.setHorizontalAlignment(SwingConstants.CENTER);
 
-        // Add the calculated average to the end of each grades array
-        // You can format the average to two decimal places
-        grades1 = new Object[] {grades1[0], grades1[1], grades1[2], grades1[3], String.format("%.2f", average1)};
-        grades2 = new Object[] {grades2[0], grades1[1], grades2[2], grades2[3], String.format("%.2f", average2)};
-        grades3 = new Object[] {grades3[0], grades3[1], grades3[2], grades3[3], String.format("%.2f", average3)};
+		DefaultTableCellRenderer left = new DefaultTableCellRenderer();
+		left.setHorizontalAlignment(SwingConstants.LEFT);
 
-        tableModel.addRow(grades1);
-        tableModel.addRow(grades2);
-        tableModel.addRow(grades3);
+		// Apply renderers
+		table.getColumnModel().getColumn(0).setCellRenderer(left);  // Class Code
+		table.getColumnModel().getColumn(1).setCellRenderer(left);  // Course Number
+		table.getColumnModel().getColumn(2).setCellRenderer(center); // Units
+		for (int c = 3; c <= 7; c++) {
+			table.getColumnModel().getColumn(c).setCellRenderer(center);
+		}
 
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder(5, 20, 0, 20));
+		// Column preferred widths for better visual match
+		table.getColumnModel().getColumn(0).setPreferredWidth(90);
+		table.getColumnModel().getColumn(1).setPreferredWidth(360);
+		table.getColumnModel().getColumn(2).setPreferredWidth(50);
+		for (int c = 3; c <= 7; c++) {
+			table.getColumnModel().getColumn(c).setPreferredWidth(140);
+		}
 
-        panel.add(titleLabel, BorderLayout.NORTH);
-        panel.add(scrollPane, BorderLayout.CENTER);
+		String NYS = "Not Yet Submitted";
 
-        return panel;
-    }
+		// Sample rows closely mirroring the screenshot
+		Object[][] rows = new Object[][]{
+			{"7024", "NSTP-CWTS 1", 3, NYS, NYS, NYS, NYS, ""},
+			{"9454", "GSTS", 3, NYS, NYS, NYS, NYS, ""},
+			{"9456", "GENVI", 3, NYS, NYS, NYS, NYS, ""},
+			{"9457", "CFE 103", 3, NYS, NYS, NYS, NYS, ""},
+			{"9458A", "IT 211", 2, NYS, NYS, NYS, NYS, ""},
+			{"9458A", "IT 212", 1, NYS, NYS, NYS, NYS, ""},
+			{"9458B", "IT 212L", 1, NYS, NYS, NYS, NYS, ""},
+			{"9459A", "IT 213", 2, NYS, NYS, NYS, NYS, ""},
+			{"9459B", "IT 213L", 1, NYS, NYS, NYS, NYS, ""},
+			{"9547", "FIT QA", 2, NYS, NYS, NYS, NYS, ""}
+		};
+
+		for (Object[] row : rows) {
+			model.addRow(row);
+		}
+
+		JScrollPane scrollPane = new JScrollPane(table);
+		scrollPane.setBorder(new EmptyBorder(0, 16, 0, 16));
+
+		// SOUTH section: note + legend
+		JPanel south = new JPanel();
+		south.setLayout(new BorderLayout());
+		south.setBackground(Color.WHITE);
+		south.setBorder(new EmptyBorder(12, 16, 16, 16));
+
+		JLabel note = new JLabel(
+			"<html><b>NOTE:</b> Deadline of submission for completion of Students is <b>February 04, 2026</b>. " +
+			"NC due to NFE/INC, if not completed, the final grades shall become permanent.</html>");
+		note.setFont(new Font("Arial", Font.PLAIN, 12));
+		note.setBorder(new EmptyBorder(8, 0, 12, 0));
+		south.add(note, BorderLayout.NORTH);
+
+		// Legend area laid out in two columns
+		JPanel legend = new JPanel(new GridLayout(1, 2, 24, 0));
+		legend.setBackground(Color.WHITE);
+
+		JTextArea legendLeft = new JTextArea(
+			"LEGEND:\n" +
+			"P  .......... Passed\n" +
+			"INC ........ Incomplete\n" +
+			"D  .......... Dropped\n" +
+			"NC ........ No Credit\n\n" +
+			"FOR UNDERGRADUATE\n" +
+			"Passing Grade ............ 75%\n" +
+			"Failure .................. Below 75%\n");
+		legendLeft.setEditable(false);
+		legendLeft.setBackground(Color.WHITE);
+		legendLeft.setFont(new Font("Arial", Font.PLAIN, 12));
+
+		JTextArea legendRight = new JTextArea(
+			"HP .......... High Pass\n" +
+			"WP .......... Withdrawal w/ Permission\n" +
+			"F  .......... Failure\n" +
+			"NFE ........ No Final Examination\n\n" +
+			"FOR GRADUATE SCHOOL\n" +
+			"Passing Grade ............ 85%\n" +
+			"Failure .................. Below 85%\n");
+		legendRight.setEditable(false);
+		legendRight.setBackground(Color.WHITE);
+		legendRight.setFont(new Font("Arial", Font.PLAIN, 12));
+
+		legend.add(legendLeft);
+		legend.add(legendRight);
+		south.add(legend, BorderLayout.CENTER);
+
+		rootPanel.add(scrollPane, BorderLayout.CENTER);
+		rootPanel.add(south, BorderLayout.SOUTH);
+
+		return rootPanel;
+	}
 
     // Method for the Announcements sub-panels
 
