@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashSet;
@@ -1011,32 +1012,489 @@ public class ISLUStudentPortal extends JFrame {
     // method for attendance Content
     private Component showAttendanceContent(MySinglyLinkedList<String> subItems) {
         JPanel attendancePanel = new JPanel(new BorderLayout());
-        attendancePanel.setBorder(BorderFactory.createTitledBorder(subItems.toString()));
-
-        String[] columnNames = {"Subject", "Present", "Absent", "Late", "Percentage"};
-        Object[][] data = {
-                {"NSTP-CWTS 1", "15", "1", "0", "93.75%"},
-                {"Programming 2", "14", "2", "1", "87.5%"},
-                {"Data Structures", "16", "0", "1", "100%"},
-                {"Database Systems", "15", "1", "0", "93.75%"},
-                {"Web Development", "13", "2", "2", "81.25%"}
-        };
-
-        DefaultTableModel attendanceModel = new DefaultTableModel(data, columnNames) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // Make all cells non-editable
-            }
-        };
-        JTable attendanceTable = new JTable(attendanceModel);
-        attendanceTable.setRowHeight(25);
-        attendanceTable.getTableHeader().setReorderingAllowed(false); // Disable column reordering
-        attendanceTable.setAutoCreateRowSorter(false); // Disable sorting
-        JScrollPane scrollPane = new JScrollPane(attendanceTable);
-
-        attendancePanel.add(scrollPane, BorderLayout.CENTER);
+        attendancePanel.setBackground(new Color(240, 240, 240));
+        
+        // Get attendance records for current student
+        MySinglyLinkedList<AttendanceRecord> attendanceRecords = loadAttendanceRecords();
+        MySinglyLinkedList<AttendanceRecord> absencesAndTardies = getAbsencesAndTardies(attendanceRecords);
+        
+        if (absencesAndTardies.getSize() == 0) {
+            // Show "Great! No Absences/Tardiness were found" message
+            attendancePanel.add(createNoAbsencesPanel(), BorderLayout.CENTER);
+        } else {
+            // Show detailed absence/tardy records
+            attendancePanel.add(createAbsenceTardyPanel(absencesAndTardies), BorderLayout.CENTER);
+        }
+        
         return attendancePanel;
     }
+    
+    // Create the "Great!" panel when no absences/tardiness found
+    private JPanel createNoAbsencesPanel() {
+        JPanel noAbsencesPanel = new JPanel(new BorderLayout());
+        noAbsencesPanel.setBackground(Color.WHITE);
+        
+        // Main content panel
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setBackground(Color.WHITE);
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(100, 50, 100, 50));
+        
+        // "Great!" title with emoji
+        JLabel titleLabel = new JLabel("Great!👍");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 48));
+        titleLabel.setForeground(new Color(80, 80, 80));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        // Message
+        JLabel messageLabel = new JLabel("No Absences/Tardiness were found.");
+        messageLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+        messageLabel.setForeground(new Color(80, 80, 80));
+        messageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        // "Click here to go back home" link
+        JLabel linkLabel = new JLabel("<html><u>click here to go back home</u></html>");
+        linkLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        linkLabel.setForeground(new Color(51, 122, 183));
+        linkLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        linkLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        linkLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // Navigate back to home - you can implement this navigation logic
+                showHomeContent();
+            }
+        });
+        
+        contentPanel.add(titleLabel);
+        contentPanel.add(Box.createVerticalStrut(20));
+        contentPanel.add(messageLabel);
+        contentPanel.add(Box.createVerticalStrut(10));
+        contentPanel.add(linkLabel);
+        
+        noAbsencesPanel.add(contentPanel, BorderLayout.CENTER);
+        return noAbsencesPanel;
+    }
+    
+    // Create the detailed absence/tardy panel
+    private JPanel createAbsenceTardyPanel(MySinglyLinkedList<AttendanceRecord> absencesAndTardies) {
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(new Color(240, 240, 240));
+        
+        // Create scroll pane for the content
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setBackground(new Color(240, 240, 240));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        
+        // Add readmission records section
+        contentPanel.add(createReadmissionRecordsSection(absencesAndTardies));
+        contentPanel.add(Box.createVerticalStrut(20));
+        
+        // Group records by subject and add subject sections
+        MySinglyLinkedList<String> subjects = getUniqueSubjects(absencesAndTardies);
+        for (int i = 0; i < subjects.getSize(); i++) {
+            String subject = subjects.get(i);
+            MySinglyLinkedList<AttendanceRecord> subjectRecords = getRecordsBySubject(absencesAndTardies, subject);
+            contentPanel.add(createSubjectSection(subject, subjectRecords));
+            contentPanel.add(Box.createVerticalStrut(15));
+        }
+        
+        JScrollPane scrollPane = new JScrollPane(contentPanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+        return mainPanel;
+    }
+    
+    // Create readmission records section
+    private JPanel createReadmissionRecordsSection(MySinglyLinkedList<AttendanceRecord> records) {
+        JPanel sectionPanel = new JPanel(new BorderLayout());
+        sectionPanel.setBackground(Color.WHITE);
+        sectionPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+        
+        // Header
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel.setBackground(new Color(51, 122, 183));
+        headerPanel.setPreferredSize(new Dimension(0, 40));
+        
+        JLabel headerIcon = new JLabel("📄");
+        headerIcon.setFont(new Font("Arial", Font.PLAIN, 16));
+        headerIcon.setForeground(Color.WHITE);
+        
+        JLabel headerTitle = new JLabel("READMISSION RECORDS");
+        headerTitle.setFont(new Font("Arial", Font.BOLD, 14));
+        headerTitle.setForeground(Color.WHITE);
+        
+        headerPanel.add(headerIcon);
+        headerPanel.add(Box.createHorizontalStrut(5));
+        headerPanel.add(headerTitle);
+        
+        // Table for readmission records
+        String[] columnNames = {"Date Readmitted", "Date Absent", "Status", "Reason / Detail", "Remarks"};
+        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        
+        // Add sample readmission record (you can populate this with actual data)
+        // For now, adding the example from the image
+        tableModel.addRow(new Object[]{
+            "SEP-04-2025",
+            "SEP-03-2025", 
+            "Excused",
+            "SICKNESS - LBM/ STOMACH ACHE/ACUTE GASTROENTERITIS",
+            "W/ MEDCERT ACUTE GASTRO, ALL SUBJECTS"
+        });
+        
+        JTable table = new JTable(tableModel);
+        table.setRowHeight(25);
+        table.setFont(new Font("Arial", Font.PLAIN, 12));
+        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
+        table.getTableHeader().setBackground(new Color(230, 230, 230));
+        table.setGridColor(new Color(200, 200, 200));
+        
+        JScrollPane tableScrollPane = new JScrollPane(table);
+        tableScrollPane.setPreferredSize(new Dimension(0, 80));
+        
+        sectionPanel.add(headerPanel, BorderLayout.NORTH);
+        sectionPanel.add(tableScrollPane, BorderLayout.CENTER);
+        
+        return sectionPanel;
+    }
+    
+    // Create subject section with absence/tardy records
+    private JPanel createSubjectSection(String subjectName, MySinglyLinkedList<AttendanceRecord> records) {
+        JPanel sectionPanel = new JPanel(new BorderLayout());
+        sectionPanel.setBackground(Color.WHITE);
+        sectionPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+        
+        // Header with subject info
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel.setBackground(new Color(13, 37, 73));
+        headerPanel.setPreferredSize(new Dimension(0, 40));
+        
+        JLabel headerIcon = new JLabel("📚");
+        headerIcon.setFont(new Font("Arial", Font.PLAIN, 16));
+        headerIcon.setForeground(Color.WHITE);
+        
+        // Format subject name with code (you can customize this based on your data)
+        String displayName = getSubjectDisplayName(subjectName);
+        JLabel headerTitle = new JLabel(displayName);
+        headerTitle.setFont(new Font("Arial", Font.BOLD, 14));
+        headerTitle.setForeground(Color.WHITE);
+        
+        headerPanel.add(headerIcon);
+        headerPanel.add(Box.createHorizontalStrut(5));
+        headerPanel.add(headerTitle);
+        
+        // Content panel with table and button
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.setBackground(Color.WHITE);
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Table for absences/tardies
+        String[] columnNames = {"Date of absence/tardy", "Date Dropped", "Date Claimed", "Remarks", "Type"};
+        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        
+        // Populate table with records
+        for (int i = 0; i < records.getSize(); i++) {
+            AttendanceRecord record = records.get(i);
+            String type = record.getStatus().equals("Absent") ? "Absent" : "Tardy";
+            tableModel.addRow(new Object[]{
+                record.getDate().format(DateTimeFormatter.ofPattern("MMM-dd-yyyy")),
+                "", // Date Dropped - empty for now
+                "", // Date Claimed - empty for now
+                record.getRemarks() != null ? record.getRemarks() : "",
+                type
+            });
+        }
+        
+        JTable table = new JTable(tableModel);
+        table.setRowHeight(25);
+        table.setFont(new Font("Arial", Font.PLAIN, 12));
+        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
+        table.getTableHeader().setBackground(new Color(230, 230, 230));
+        table.setGridColor(new Color(200, 200, 200));
+        
+        // Set specific column widths
+        table.getColumnModel().getColumn(4).setPreferredWidth(80);
+        table.getColumnModel().getColumn(4).setMaxWidth(80);
+        
+        JScrollPane tableScrollPane = new JScrollPane(table);
+        tableScrollPane.setPreferredSize(new Dimension(0, Math.min(100, (records.getSize() + 1) * 25 + 5)));
+        
+        // Apply reason button
+        JButton applyReasonButton = new JButton("✏️ Apply Reason of absence/tardy from the selected date/s");
+        applyReasonButton.setFont(new Font("Arial", Font.PLAIN, 12));
+        applyReasonButton.setBackground(new Color(240, 173, 78));
+        applyReasonButton.setForeground(Color.BLACK);
+        applyReasonButton.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        applyReasonButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        applyReasonButton.addActionListener(e -> showReasonDialog(table, records));
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        buttonPanel.setBackground(Color.WHITE);
+        buttonPanel.add(applyReasonButton);
+        
+        contentPanel.add(tableScrollPane, BorderLayout.CENTER);
+        contentPanel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        sectionPanel.add(headerPanel, BorderLayout.NORTH);
+        sectionPanel.add(contentPanel, BorderLayout.CENTER);
+        
+        return sectionPanel;
+    }
+    
+    // Show reason input dialog
+    private void showReasonDialog(JTable table, MySinglyLinkedList<AttendanceRecord> records) {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, 
+                "Ooops!\n\nPlease select date/s of absence/tardy.", 
+                "Reason/s of absences/tardiness in class: (9457)", 
+                JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
+        // Create reason input dialog
+        JDialog reasonDialog = new JDialog(this, "Reason/s of absences/tardiness in class: (9457)", true);
+        reasonDialog.setSize(500, 400);
+        reasonDialog.setLocationRelativeTo(this);
+        reasonDialog.setLayout(new BorderLayout());
+        
+        // Header panel
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel.setBackground(new Color(13, 37, 73));
+        headerPanel.setPreferredSize(new Dimension(0, 50));
+        
+        JLabel headerIcon = new JLabel("📅");
+        headerIcon.setFont(new Font("Arial", Font.PLAIN, 16));
+        headerIcon.setForeground(Color.WHITE);
+        
+        JLabel headerTitle = new JLabel("Selected Date of absences/tardiness");
+        headerTitle.setFont(new Font("Arial", Font.BOLD, 14));
+        headerTitle.setForeground(Color.WHITE);
+        
+        headerPanel.add(headerIcon);
+        headerPanel.add(Box.createHorizontalStrut(5));
+        headerPanel.add(headerTitle);
+        
+        // Date display panel
+        JPanel datePanel = new JPanel(new BorderLayout());
+        datePanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        datePanel.setBackground(Color.WHITE);
+        
+        JLabel dateLabel = new JLabel("Date");
+        dateLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        
+        AttendanceRecord selectedRecord = records.get(selectedRow);
+        JTextField dateField = new JTextField(selectedRecord.getDate().format(DateTimeFormatter.ofPattern("MMMM dd, yyyy, EEEE")));
+        dateField.setEditable(false);
+        dateField.setBackground(new Color(245, 245, 245));
+        dateField.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        
+        datePanel.add(dateLabel, BorderLayout.NORTH);
+        datePanel.add(Box.createVerticalStrut(5), BorderLayout.CENTER);
+        datePanel.add(dateField, BorderLayout.SOUTH);
+        
+        // Reason input panel
+        JPanel reasonPanel = new JPanel(new BorderLayout());
+        reasonPanel.setBorder(BorderFactory.createEmptyBorder(0, 15, 15, 15));
+        reasonPanel.setBackground(Color.WHITE);
+        
+        JPanel reasonHeaderPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        reasonHeaderPanel.setBackground(new Color(13, 37, 73));
+        reasonHeaderPanel.setPreferredSize(new Dimension(0, 40));
+        
+        JLabel reasonIcon = new JLabel("💭");
+        reasonIcon.setFont(new Font("Arial", Font.PLAIN, 16));
+        reasonIcon.setForeground(Color.WHITE);
+        
+        JLabel reasonTitle = new JLabel("Enter your reason");
+        reasonTitle.setFont(new Font("Arial", Font.BOLD, 14));
+        reasonTitle.setForeground(Color.WHITE);
+        
+        reasonHeaderPanel.add(reasonIcon);
+        reasonHeaderPanel.add(Box.createHorizontalStrut(5));
+        reasonHeaderPanel.add(reasonTitle);
+        
+        JTextArea reasonTextArea = new JTextArea(5, 30);
+        reasonTextArea.setFont(new Font("Arial", Font.PLAIN, 12));
+        reasonTextArea.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        reasonTextArea.setText(selectedRecord.getRemarks());
+        
+        JScrollPane reasonScrollPane = new JScrollPane(reasonTextArea);
+        reasonScrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+        
+        reasonPanel.add(reasonHeaderPanel, BorderLayout.NORTH);
+        reasonPanel.add(reasonScrollPane, BorderLayout.CENTER);
+        
+        // Button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.setBackground(new Color(240, 240, 240));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JButton submitButton = new JButton("📝 Submit");
+        submitButton.setFont(new Font("Arial", Font.BOLD, 12));
+        submitButton.setBackground(new Color(51, 122, 183));
+        submitButton.setForeground(Color.WHITE);
+        submitButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        submitButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        submitButton.addActionListener(e -> {
+            // Update the reason in the record
+            String newReason = reasonTextArea.getText().trim();
+            selectedRecord.setRemarks(newReason);
+            
+            // Update the table display
+            table.setValueAt(newReason, selectedRow, 3);
+            
+            // TODO: Save to file - implement this when adding backend functionality
+            // saveAttendanceRecords(records);
+            
+            reasonDialog.dispose();
+            JOptionPane.showMessageDialog(ISLUStudentPortal.this, "Reason updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        });
+        
+        buttonPanel.add(submitButton);
+        
+        // Fix layout
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.add(datePanel, BorderLayout.NORTH);
+        centerPanel.add(reasonPanel, BorderLayout.CENTER);
+        
+        reasonDialog.add(headerPanel, BorderLayout.NORTH);
+        reasonDialog.add(centerPanel, BorderLayout.CENTER);
+        reasonDialog.add(buttonPanel, BorderLayout.SOUTH);
+        
+        reasonDialog.setVisible(true);
+    }
+    
+    // Helper method to get subject display name with code
+    private String getSubjectDisplayName(String subjectName) {
+        // Map subject names to codes - you can customize this based on your data
+        switch (subjectName) {
+            case "NSTP-CWTS 1": return "9455 - GENVI (ENVIRONMENTAL SCIENCE)";
+            case "Programming 2": return "9457 - IT 211 (REQUIREMENTS ANALYSIS AND MODELING)";
+            case "Data Structures": return "9458A - IT 212 (DATA STRUCTURES (LEC))";
+            case "Database Systems": return "9458B - IT 212L (DATA STRUCTURES (LAB))";
+            case "Web Development": return "9459 - WD 101 (WEB DEVELOPMENT)";
+            default: return subjectName;
+        }
+    }
+    
+    // Load attendance records from file
+    private MySinglyLinkedList<AttendanceRecord> loadAttendanceRecords() {
+        MySinglyLinkedList<AttendanceRecord> records = new MySinglyLinkedList<>();
+        
+        /* TODO: Faculty Backend Integration
+         * This method should load attendance records from the database/file
+         * Faculty will mark students as Present/Absent/Late through their interface
+         * The data should be stored in attendanceRecords.txt or database
+         * Format: StudentID,SubjectCode,SubjectName,Date,Status,Remarks
+         * 
+         * For now, we'll simulate loading from the existing file structure
+         */
+        
+        try {
+            // Read from attendanceRecords.txt - implement actual file reading here
+            // This is a placeholder - you'll need to implement the actual file reading
+            String currentStudentId = "2250493"; // Get from current session
+            
+            // Sample data for demonstration - replace with actual file reading
+            records.add(new AttendanceRecord("2250493", "NSTP101", "NSTP-CWTS 1", 
+                java.time.LocalDate.of(2025, 9, 24), "Absent", "Acute Gastroenteritis"));
+            records.add(new AttendanceRecord("2250493", "IT122", "Programming 2", 
+                java.time.LocalDate.of(2025, 9, 24), "Absent", "Family emergency"));
+            records.add(new AttendanceRecord("2250493", "IT122", "Programming 2", 
+                java.time.LocalDate.of(2025, 9, 26), "Absent", "Sick"));
+            records.add(new AttendanceRecord("2250493", "IT122", "Programming 2", 
+                java.time.LocalDate.of(2025, 9, 29), "Late", "Traffic"));
+            records.add(new AttendanceRecord("2250493", "IT211", "Data Structures", 
+                java.time.LocalDate.of(2025, 10, 6), "Late", "Overslept"));
+            records.add(new AttendanceRecord("2250493", "IT311", "Database Systems", 
+                java.time.LocalDate.of(2025, 9, 24), "Absent", "Doctor appointment"));
+            records.add(new AttendanceRecord("2250493", "WD101", "Web Development", 
+                java.time.LocalDate.of(2025, 9, 24), "Absent", "Personal matter"));
+            records.add(new AttendanceRecord("2250493", "WD101", "Web Development", 
+                java.time.LocalDate.of(2025, 9, 26), "Absent", "Sick"));
+            records.add(new AttendanceRecord("2250493", "WD101", "Web Development", 
+                java.time.LocalDate.of(2025, 9, 29), "Late", "Bus delay"));
+            records.add(new AttendanceRecord("2250493", "WD101", "Web Development", 
+                java.time.LocalDate.of(2025, 10, 1), "Late", "Traffic"));
+            
+        } catch (Exception e) {
+            System.err.println("Error loading attendance records: " + e.getMessage());
+        }
+        
+        return records;
+    }
+    
+    // Filter records to get only absences and tardies
+    private MySinglyLinkedList<AttendanceRecord> getAbsencesAndTardies(MySinglyLinkedList<AttendanceRecord> allRecords) {
+        MySinglyLinkedList<AttendanceRecord> filtered = new MySinglyLinkedList<>();
+        
+        for (int i = 0; i < allRecords.getSize(); i++) {
+            AttendanceRecord record = allRecords.get(i);
+            if ("Absent".equals(record.getStatus()) || "Late".equals(record.getStatus())) {
+                filtered.add(record);
+            }
+        }
+        
+        return filtered;
+    }
+    
+    // Get unique subjects from records
+    private MySinglyLinkedList<String> getUniqueSubjects(MySinglyLinkedList<AttendanceRecord> records) {
+        MySinglyLinkedList<String> subjects = new MySinglyLinkedList<>();
+        
+        for (int i = 0; i < records.getSize(); i++) {
+            String subject = records.get(i).getSubjectName();
+            boolean found = false;
+            for (int j = 0; j < subjects.getSize(); j++) {
+                if (subjects.get(j).equals(subject)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                subjects.add(subject);
+            }
+        }
+        
+        return subjects;
+    }
+    
+    // Get records for a specific subject
+    private MySinglyLinkedList<AttendanceRecord> getRecordsBySubject(MySinglyLinkedList<AttendanceRecord> allRecords, String subject) {
+        MySinglyLinkedList<AttendanceRecord> subjectRecords = new MySinglyLinkedList<>();
+        
+        for (int i = 0; i < allRecords.getSize(); i++) {
+            AttendanceRecord record = allRecords.get(i);
+            if (record.getSubjectName().equals(subject)) {
+                subjectRecords.add(record);
+            }
+        }
+        
+        return subjectRecords;
+    }
+    
+    // Navigate to home content
+    private void showHomeContent() {
+        // TODO: Implement navigation back to home
+        // This should reset the sidebar selection and show the home content
+        // You can implement this based on your existing navigation logic
+    }
+    
     // method for Personal Details Content
     private void showPersonalDetailsContent(MySinglyLinkedList<String> subItems) {
         contentPanel.removeAll();
