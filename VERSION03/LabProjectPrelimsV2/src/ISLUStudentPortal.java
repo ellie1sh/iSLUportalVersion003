@@ -642,36 +642,75 @@ public class ISLUStudentPortal extends JFrame {
         minStart = roundDownToHalfHour(minStart);
         maxEnd = roundUpToHalfHour(maxEnd);
 
-        // Column names from subItems
-        String[] columnNames = {"","Time", "Monday","Tuesday","Wednesday","Thursday","Friday"};
+		// Build CLASS SCHEDULE table (top)
+		String[] classCols = {"Class Code", "Course Number", "Course Description", "Units", "Schedule", "Days", "Room", "Module"};
+		List<Object[]> classRows = new ArrayList<>();
+		for (CourseScheduleItem c : courses) {
+			classRows.add(new Object[]{
+				c.classCode,
+				c.courseNumber,
+				c.courseDescription,
+				String.valueOf(c.units),
+				formatTime(c.startTime) + " - " + formatTime(c.endTime),
+				c.days,
+				c.room,
+				""
+			});
+		}
+		DefaultTableModel classModel = new DefaultTableModel(classRows.toArray(new Object[0][]), classCols) {
+			@Override
+			public boolean isCellEditable(int row, int column) { return false; }
+		};
+		JTable classTable = new JTable(classModel);
+		classTable.setRowHeight(28);
+		classTable.getTableHeader().setReorderingAllowed(false);
+		JScrollPane classScroll = new JScrollPane(classTable);
 
-        // Build data rows
-        List<Object[]> rows = new ArrayList<>();
-        for (LocalTime slot = minStart; slot.isBefore(maxEnd); slot = slot.plusMinutes(30)) {
-            LocalTime next = slot.plusMinutes(30);
-            Object[] row = new Object[columnNames.length];
-            row[0] = formatTimeRange(slot, next);
-            row[1] = courseLabelAtTime(courses, slot, "M");
-            row[2] = courseLabelAtTime(courses, slot, "T");
-            row[3] = courseLabelAtTime(courses, slot, "W");
-            row[4] = courseLabelAtTime(courses, slot, "TH");
-            row[5] = courseLabelAtTime(courses, slot, "F");
-            row[6] = courseLabelAtTime(courses, slot, "S");
-            rows.add(row);
-        }
+		// Build WEEKLY VIEW table (bottom)
+		String[] columnNames = {"Time", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
-        DefaultTableModel scheduleModel = new DefaultTableModel(rows.toArray(new Object[0][]), columnNames) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        JTable scheduleTable = new JTable(scheduleModel);
-        scheduleTable.setRowHeight(28);
-        scheduleTable.getTableHeader().setReorderingAllowed(false);
-        scheduleTable.setAutoCreateRowSorter(false);
-        JScrollPane scrollPane = new JScrollPane(scheduleTable);
-        schedulePanel.add(scrollPane, BorderLayout.CENTER);
+		List<Object[]> rows = new ArrayList<>();
+		for (LocalTime slot = minStart; slot.isBefore(maxEnd); slot = slot.plusMinutes(30)) {
+			LocalTime next = slot.plusMinutes(30);
+			Object[] row = new Object[columnNames.length];
+			row[0] = formatTimeRange(slot, next);
+			row[1] = courseLabelAtTime(courses, slot, "M");
+			row[2] = courseLabelAtTime(courses, slot, "T");
+			row[3] = courseLabelAtTime(courses, slot, "W");
+			row[4] = courseLabelAtTime(courses, slot, "TH");
+			row[5] = courseLabelAtTime(courses, slot, "F");
+			row[6] = courseLabelAtTime(courses, slot, "S");
+			rows.add(row);
+		}
+
+		DefaultTableModel scheduleModel = new DefaultTableModel(rows.toArray(new Object[0][]), columnNames) {
+			@Override
+			public boolean isCellEditable(int row, int column) { return false; }
+		};
+		JTable scheduleTable = new JTable(scheduleModel);
+		scheduleTable.setRowHeight(28);
+		scheduleTable.getTableHeader().setReorderingAllowed(false);
+		scheduleTable.setAutoCreateRowSorter(false);
+		JScrollPane weeklyScroll = new JScrollPane(scheduleTable);
+
+		// Compose the panel with titles and both tables
+		JPanel tablesPanel = new JPanel();
+		tablesPanel.setLayout(new BoxLayout(tablesPanel, BoxLayout.Y_AXIS));
+		tablesPanel.setBackground(Color.WHITE);
+
+		JLabel classTitle = new JLabel("CLASS SCHEDULE");
+		classTitle.setFont(new Font("Arial", Font.BOLD, 14));
+		classTitle.setBorder(BorderFactory.createEmptyBorder(10, 10, 6, 10));
+		tablesPanel.add(classTitle);
+		tablesPanel.add(classScroll);
+
+		JLabel weeklyTitle = new JLabel("WEEKLY VIEW");
+		weeklyTitle.setFont(new Font("Arial", Font.BOLD, 14));
+		weeklyTitle.setBorder(BorderFactory.createEmptyBorder(14, 10, 6, 10));
+		tablesPanel.add(weeklyTitle);
+		tablesPanel.add(weeklyScroll);
+
+		schedulePanel.add(tablesPanel, BorderLayout.CENTER);
 
         // Footer with total units
         JLabel footer = new JLabel("Total Units: " + totalUnits);
