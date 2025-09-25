@@ -3384,7 +3384,7 @@ public class ISLUStudentPortal extends JFrame {
 
         // Header
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        headerPanel.setBackground(new Color(52, 73, 94));
+        headerPanel.setBackground(new Color(10, 45, 90));
         headerPanel.setPreferredSize(new Dimension(0, 50));
         
         JLabel headerIcon = new JLabel("📁");
@@ -3402,7 +3402,7 @@ public class ISLUStudentPortal extends JFrame {
         // Content with downloadable items
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        contentPanel.setBackground(new Color(245, 245, 245));
+        contentPanel.setBackground(Color.WHITE);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
         // Add all downloadable categories
@@ -3413,6 +3413,7 @@ public class ISLUStudentPortal extends JFrame {
         addDownloadableCategory(contentPanel, "SAS", createSASDownloadables());
         addDownloadableCategory(contentPanel, "SEA", createSEADownloadables());
         addDownloadableCategory(contentPanel, "SONAHBS", createSONAHBSDownloadables());
+        addDownloadableCategory(contentPanel, "SOL", createSOLDownloadables());
         addDownloadableCategory(contentPanel, "SOM", createSOMDownloadables());
         addDownloadableCategory(contentPanel, "STELA", createSTELADownloadables());
         addDownloadableCategory(contentPanel, "Student Services Orientation", createStudentServicesDownloadables());
@@ -3434,7 +3435,7 @@ public class ISLUStudentPortal extends JFrame {
 
         // Header
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        headerPanel.setBackground(new Color(52, 73, 94));
+        headerPanel.setBackground(new Color(10, 45, 90));
         headerPanel.setPreferredSize(new Dimension(0, 50));
         
         JLabel headerIcon = new JLabel("ℹ️");
@@ -3462,8 +3463,8 @@ public class ISLUStudentPortal extends JFrame {
         contentPanel.add(overviewTitle);
         contentPanel.add(Box.createVerticalStrut(15));
 
-        // ABOUT ISLU PORTAL section
-        JLabel aboutPortalTitle = new JLabel("ABOUT ISLU PORTAL");
+        // ABOUT iSLU PORTAL section
+        JLabel aboutPortalTitle = new JLabel("ABOUT iSLU PORTAL");
         aboutPortalTitle.setFont(new Font("Arial", Font.BOLD, 14));
         aboutPortalTitle.setForeground(Color.BLACK);
         contentPanel.add(aboutPortalTitle);
@@ -3559,7 +3560,8 @@ public class ISLUStudentPortal extends JFrame {
         // Category items
         for (String item : items) {
             JPanel itemPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 2));
-            itemPanel.setBackground(new Color(245, 245, 245));
+            itemPanel.setBackground(Color.WHITE);
+            itemPanel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
             
             JLabel itemLabel = new JLabel("○ " + item.split("\\|")[0]);
             itemLabel.setFont(new Font("Arial", Font.PLAIN, 12));
@@ -3590,7 +3592,7 @@ public class ISLUStudentPortal extends JFrame {
             "Student Handbook",
             "Safety Orientation Manual",
             "Ordinance 021-2018 - Harassment",
-            "GGuide for Education",
+            "GSuite for Education",
             "The Mission and Identity Cluster",
             "Official List of Student Organizations",
             "UNIVERSITY LIBRARIES",
@@ -3653,7 +3655,12 @@ public class ISLUStudentPortal extends JFrame {
 
     private String[] createSONAHBSDownloadables() {
         return new String[]{
-            "SONAHBS Online Helpdesk",
+            "SONAHBS Online Helpdesk"
+        };
+    }
+
+    private String[] createSOLDownloadables() {
+        return new String[]{
             "SOL Online Helpdesk"
         };
     }
