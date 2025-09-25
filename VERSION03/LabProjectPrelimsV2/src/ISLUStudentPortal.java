@@ -704,7 +704,7 @@ public class ISLUStudentPortal extends JFrame {
     private JPanel createClassScheduleTable() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.WHITE);
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+		panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 5, 15));
         
         // Get course data
         List<CourseScheduleItem> courses = getSampleCourses();
@@ -722,7 +722,7 @@ public class ISLUStudentPortal extends JFrame {
             data[i][2] = course.courseDescription;
             data[i][3] = course.units;
             data[i][4] = formatTime(course.startTime) + " - " + formatTime(course.endTime);
-            data[i][5] = course.days;
+			data[i][5] = formatDays(course.days);
             data[i][6] = course.room;
             data[i][7] = getModuleFromRoom(course.room); // Extract module from room
         }
@@ -759,10 +759,10 @@ public class ISLUStudentPortal extends JFrame {
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
         panel.add(scrollPane, BorderLayout.CENTER);
         
-        // Footer with total units and block info
+		// Footer with total units and block info
         JPanel footerPanel = new JPanel(new BorderLayout());
         footerPanel.setBackground(Color.WHITE);
-        footerPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+		footerPanel.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
         
         JLabel unitsLabel = new JLabel("Total Units: " + totalUnits);
         unitsLabel.setFont(new Font("Arial", Font.BOLD, 12));
@@ -777,6 +777,54 @@ public class ISLUStudentPortal extends JFrame {
         
         return panel;
     }
+
+	/**
+	 * Formats compact day strings (e.g., "TTHS") into readable abbreviations (e.g., "Tue Thu Sat").
+	 */
+	private String formatDays(String rawDays) {
+		if (rawDays == null || rawDays.isEmpty()) {
+			return "";
+		}
+		String s = rawDays.trim().toUpperCase();
+		StringBuilder result = new StringBuilder();
+		int i = 0;
+		while (i < s.length()) {
+			if (i + 1 < s.length() && s.charAt(i) == 'T' && s.charAt(i + 1) == 'H') {
+				// Thursday token
+				if (result.length() > 0) result.append(' ');
+				result.append("Thu");
+				i += 2;
+				continue;
+			}
+			char ch = s.charAt(i);
+			switch (ch) {
+				case 'M':
+					if (result.length() > 0) result.append(' ');
+					result.append("Mon");
+					break;
+				case 'T':
+					if (result.length() > 0) result.append(' ');
+					result.append("Tue");
+					break;
+				case 'W':
+					if (result.length() > 0) result.append(' ');
+					result.append("Wed");
+					break;
+				case 'F':
+					if (result.length() > 0) result.append(' ');
+					result.append("Fri");
+					break;
+				case 'S':
+					if (result.length() > 0) result.append(' ');
+					result.append("Sat");
+					break;
+				default:
+					break;
+			}
+			i++;
+		}
+		return result.toString();
+	}
     
     private JPanel createWeeklyViewTable() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -816,7 +864,7 @@ public class ISLUStudentPortal extends JFrame {
             row[4] = getWeeklyCourseLabelAtTime(courses, slot, "W");  // Wednesday
             row[5] = getWeeklyCourseLabelAtTime(courses, slot, "TH"); // Thursday
             row[6] = getWeeklyCourseLabelAtTime(courses, slot, "F");  // Friday
-            row[7] = ""; // Saturday
+			row[7] = getWeeklyCourseLabelAtTime(courses, slot, "S"); // Saturday
             rows.add(row);
         }
         
