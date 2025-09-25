@@ -50,6 +50,33 @@ public class DataManager {
     private static File getUserPasswordFile() { return resolveFile(USER_PASSWORD_FILE); }
     private static File getPaymentLogsFile() { return resolveFile(PAYMENT_LOGS_FILE); }
 
+    private static boolean isSkippableLine(String line) {
+        if (line == null) return true;
+        String trimmed = line.trim();
+        if (trimmed.isEmpty()) return true;
+        if (trimmed.startsWith("===")) return true;
+        if (trimmed.startsWith("Format:")) return true;
+        if (trimmed.startsWith("#")) return true;
+        return false;
+    }
+
+    private static void ensureHeader(File targetFile, String headerLine, String formatLine) throws IOException {
+        if (targetFile == null) return;
+        if (!targetFile.exists() || targetFile.length() == 0) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(targetFile, true))) {
+                if (headerLine != null && !headerLine.isEmpty()) {
+                    writer.write(headerLine);
+                    writer.newLine();
+                }
+                if (formatLine != null && !formatLine.isEmpty()) {
+                    writer.write(formatLine);
+                    writer.newLine();
+                    writer.newLine();
+                }
+            }
+        }
+    }
+
     public static boolean databaseExists() {
         return getDatabaseFile().exists();
     }
@@ -70,10 +97,7 @@ public class DataManager {
             try (BufferedReader reader = new BufferedReader(new FileReader(databaseFile))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    // Skip empty lines
-                    if (line.trim().isEmpty()) {
-                        continue;
-                    }
+                    if (isSkippableLine(line)) continue;
                     
                     // Handle lines with profile data (containing | separator)
                     String[] mainParts = line.split("\\|");
@@ -112,10 +136,7 @@ public class DataManager {
             try (BufferedReader reader = new BufferedReader(new FileReader(databaseFile))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    // Skip empty lines
-                    if (line.trim().isEmpty()) {
-                        continue;
-                    }
+                    if (isSkippableLine(line)) continue;
                     
                     // Handle lines with profile data (containing | separator)
                     String[] mainParts = line.split("\\|");
@@ -154,6 +175,7 @@ public class DataManager {
         try {
             // Save to Database.txt
             File dbFile = getDatabaseFile();
+            ensureHeader(dbFile, "=== STUDENT DATABASE ===", "Format: StudentID,LastName,FirstName,MiddleName,DateOfBirth,Password|ProfileKey=Value;...");
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(dbFile, true))) {
                 String dbEntry = studentInfo.toDatabaseFormat();
                 writer.write(dbEntry);
@@ -190,6 +212,7 @@ public class DataManager {
                 try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
+                        if (isSkippableLine(line)) continue;
                         String[] parts = line.split(",");
                         if (parts.length > 0) {
                             usedIDs.add(parts[0]);
@@ -220,6 +243,7 @@ public class DataManager {
     public static void logPaymentTransaction(String channelName, double amount, String studentID) {
         try {
             File logFile = getPaymentLogsFile();
+            ensureHeader(logFile, "=== PAYMENT LOGS ===", "Format: DateTime,Channel,Reference,Amount,StudentID");
             
             java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("MM/dd/yyyy hh:mm a");
             String currentDateTime = dateFormat.format(new java.util.Date());
@@ -252,16 +276,23 @@ public class DataManager {
                 try (BufferedReader reader = new BufferedReader(new FileReader(logFile))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        String[] parts = line.split(",");
-                        if (parts.length >= 5) {
-                            String transactionStudentID = parts[4].trim();
-                            if (studentID.equals(transactionStudentID)) {
-                                transactions.add(new PaymentTransaction(
-                                    parts[0].trim(), // Date
-                                    parts[1].trim(), // Channel
-                                    parts[2].trim(), // Reference
-                                    parts[3].trim()  // Amount
-                                ));
+                        if (isSkippableLine(line)) continue;
+                        String[] rawParts = line.split(",");
+                        if (rawParts.length >= 5) {
+                            String dateTime = rawParts[0].trim();
+                            String channel = rawParts[1].trim();
+                            String reference = rawParts[2].trim();
+                            String studentIdToken = rawParts[rawParts.length - 1].trim();
+
+                            StringBuilder amountBuilder = new StringBuilder();
+                            for (int i = 3; i < rawParts.length - 1; i++) {
+                                if (i > 3) amountBuilder.append(",");
+                                amountBuilder.append(rawParts[i]);
+                            }
+                            String amount = amountBuilder.toString().trim();
+
+                            if (studentID.equals(studentIdToken)) {
+                                transactions.add(new PaymentTransaction(dateTime, channel, reference, amount));
                             }
                         }
                     }
@@ -290,10 +321,7 @@ public class DataManager {
             try (BufferedReader reader = new BufferedReader(new FileReader(databaseFile))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    // Skip empty lines
-                    if (line.trim().isEmpty()) {
-                        continue;
-                    }
+                    if (isSkippableLine(line)) continue;
                     
                     // Handle lines with profile data (containing | separator)
                     String[] mainParts = line.split("\\|");
@@ -331,7 +359,7 @@ public class DataManager {
                 try (BufferedReader reader = new BufferedReader(new FileReader(dbFile))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        if (line.trim().isEmpty()) continue;
+                        if (isSkippableLine(line)) continue;
                         
                         System.out.println("DEBUG: Checking line: " + line);
                         
@@ -375,11 +403,17 @@ public class DataManager {
                 try (BufferedReader reader = new BufferedReader(new FileReader(dbFile))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        if (line.trim().isEmpty()) continue;
-                        String[] parts = line.split(",");
+                        if (isSkippableLine(line)) { lines.add(line); continue; }
+                        // Preserve any profile data to the right of '|'
+                        String[] mainParts = line.split("\\|");
+                        String basicInfo = mainParts[0];
+                        String profileExisting = mainParts.length > 1 ? mainParts[1] : "";
+
+                        String[] parts = basicInfo.split(",");
                         if (parts.length > 0 && parts[0].equals(studentID)) {
                             // Append profile data to the existing line
-                            line = line + "|" + profileData;
+                            String updatedBasic = String.join(",", parts);
+                            line = profileExisting.isEmpty() ? updatedBasic + "|" + profileData : updatedBasic + "|" + profileExisting + profileData;
                         }
                         lines.add(line);
                     }
@@ -416,7 +450,7 @@ public class DataManager {
                 try (BufferedReader reader = new BufferedReader(new FileReader(dbFile))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        if (line.trim().isEmpty()) continue;
+                        if (isSkippableLine(line)) { lines.add(line); continue; }
                         
                         // Handle lines with profile data (containing | separator)
                         String[] mainParts = line.split("\\|");
@@ -438,8 +472,8 @@ public class DataManager {
                 
                 // Write back to file
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(dbFile))) {
-                    for (String line : lines) {
-                        writer.write(line);
+                    for (String outLine : lines) {
+                        writer.write(outLine);
                         writer.newLine();
                     }
                 }
