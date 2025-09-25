@@ -417,11 +417,20 @@ public class DataManager {
                     String line;
                     while ((line = reader.readLine()) != null) {
                         if (line.trim().isEmpty()) continue;
-                        String[] parts = line.split(",");
+                        
+                        // Handle lines with profile data (containing | separator)
+                        String[] mainParts = line.split("\\|");
+                        String basicInfo = mainParts[0]; // Everything before the |
+                        String profileData = mainParts.length > 1 ? mainParts[1] : "";
+                        
+                        String[] parts = basicInfo.split(",");
                         if (parts.length > 0 && parts[0].equals(studentID)) {
-                            // Update the password (last field)
-                            parts[parts.length - 1] = newPassword;
-                            line = String.join(",", parts);
+                            // Update the password (6th field, index 5)
+                            if (parts.length >= 6) {
+                                parts[5] = newPassword;
+                                String updatedBasicInfo = String.join(",", parts);
+                                line = profileData.isEmpty() ? updatedBasicInfo : updatedBasicInfo + "|" + profileData;
+                            }
                         }
                         lines.add(line);
                     }

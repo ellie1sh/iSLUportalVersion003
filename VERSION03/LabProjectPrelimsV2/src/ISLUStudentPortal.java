@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
+import java.io.File;
+import javax.swing.Timer;
 
 public class ISLUStudentPortal extends JFrame {
     private JPanel mainPanel;
@@ -18,6 +20,8 @@ public class ISLUStudentPortal extends JFrame {
     private JPanel sidebarPanel;
     private JPanel footbarPanel;
     private JLabel userNameLabel;
+    private long lastDatabaseModified = 0; // Track database file modification time
+    private Timer databaseCheckTimer; // Timer for checking database changes
     private JLabel semesterLabel;
     private JTextArea announcementsArea;
     private JTextArea statusArea;
@@ -42,6 +46,18 @@ public class ISLUStudentPortal extends JFrame {
         initializeComponents();
         setupLayout(PortalUtils.createHomeSublist());
         loadAnnouncements();
+        
+        // Start database monitoring
+        startDatabaseMonitoring();
+        
+        // Add window listener to stop monitoring when window closes
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                stopDatabaseMonitoring();
+                System.exit(0);
+            }
+        });
         loadStudentStatus();
     }
 
@@ -1780,6 +1796,32 @@ public class ISLUStudentPortal extends JFrame {
         rightPanel.setBackground(Color.WHITE);
         rightPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
+        // Add refresh button
+        JPanel refreshPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        refreshPanel.setBackground(Color.WHITE);
+        JButton refreshButton = new JButton("🔄 Refresh Data");
+        refreshButton.setFont(new Font("Arial", Font.PLAIN, 11));
+        refreshButton.setBackground(new Color(13, 37, 73));
+        refreshButton.setForeground(Color.WHITE);
+        refreshButton.setFocusPainted(false);
+        refreshButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        refreshButton.addActionListener(e -> {
+            refreshButton.setText("🔄 Refreshing...");
+            refreshButton.setEnabled(false);
+            SwingUtilities.invokeLater(() -> {
+                showAccountInfo();
+                // Reset button text after a short delay to show the refresh completed
+                Timer resetTimer = new Timer(500, resetEvent -> {
+                    refreshButton.setText("🔄 Refresh Data");
+                    refreshButton.setEnabled(true);
+                });
+                resetTimer.setRepeats(false);
+                resetTimer.start();
+            });
+        });
+        refreshPanel.add(refreshButton);
+        rightPanel.add(refreshPanel);
+        
         // Create account information section with image styling
         JPanel accountInfoPanel = createImageStyledSectionPanel("ACCOUNT INFORMATION");
         
@@ -1851,6 +1893,35 @@ public class ISLUStudentPortal extends JFrame {
         
         passwordFormPanel.add(headerPanel);
         
+        // Add password requirements information
+        JPanel requirementsPanel = new JPanel();
+        requirementsPanel.setLayout(new BoxLayout(requirementsPanel, BoxLayout.Y_AXIS));
+        requirementsPanel.setBackground(Color.WHITE);
+        requirementsPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 10, 20));
+        
+        JLabel requirementsTitle = new JLabel("Password Requirements:");
+        requirementsTitle.setFont(new Font("Arial", Font.BOLD, 12));
+        requirementsTitle.setForeground(new Color(60, 60, 60));
+        requirementsPanel.add(requirementsTitle);
+        
+        String[] requirements = {
+            "• At least 8 characters long",
+            "• At least one uppercase letter (A-Z)",
+            "• At least one lowercase letter (a-z)",
+            "• At least one number (0-9)",
+            "• At least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)"
+        };
+        
+        for (String requirement : requirements) {
+            JLabel reqLabel = new JLabel(requirement);
+            reqLabel.setFont(new Font("Arial", Font.PLAIN, 11));
+            reqLabel.setForeground(new Color(80, 80, 80));
+            reqLabel.setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 0));
+            requirementsPanel.add(reqLabel);
+        }
+        
+        passwordFormPanel.add(requirementsPanel);
+        
         // Store password fields for later access
         JPasswordField oldPasswordField = new JPasswordField();
         JPasswordField newPasswordField = new JPasswordField();
@@ -1899,14 +1970,30 @@ public class ISLUStudentPortal extends JFrame {
                 return;
             }
             
-            // Here you would typically validate the old password against the database
-            // For now, we'll just show a success message
-            JOptionPane.showMessageDialog(this, "Password changed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            // Validate old password against database
+            if (!DataManager.authenticateUser(studentID, oldPassword)) {
+                JOptionPane.showMessageDialog(this, "Old password is incorrect.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
             
-            // Clear the fields
-            oldPasswordField.setText("");
-            newPasswordField.setText("");
-            retypePasswordField.setText("");
+            // Validate new password requirements
+            String passwordValidationError = validatePasswordRequirements(newPassword);
+            if (passwordValidationError != null) {
+                JOptionPane.showMessageDialog(this, passwordValidationError, "Password Requirements", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Update password in database
+            if (DataManager.updateStudentPassword(studentID, newPassword)) {
+                JOptionPane.showMessageDialog(this, "Password changed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                
+                // Clear the fields
+                oldPasswordField.setText("");
+                newPasswordField.setText("");
+                retypePasswordField.setText("");
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to update password. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
         });
         
         cancelButton.addActionListener(e -> {
@@ -2006,6 +2093,32 @@ public class ISLUStudentPortal extends JFrame {
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
         rightPanel.setBackground(Color.WHITE);
         rightPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        
+        // Add refresh button
+        JPanel refreshPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        refreshPanel.setBackground(Color.WHITE);
+        JButton refreshButton = new JButton("🔄 Refresh Data");
+        refreshButton.setFont(new Font("Arial", Font.PLAIN, 11));
+        refreshButton.setBackground(new Color(13, 37, 73));
+        refreshButton.setForeground(Color.WHITE);
+        refreshButton.setFocusPainted(false);
+        refreshButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        refreshButton.addActionListener(e -> {
+            refreshButton.setText("🔄 Refreshing...");
+            refreshButton.setEnabled(false);
+            SwingUtilities.invokeLater(() -> {
+                showPersonalDetailsInRightPanel();
+                // Reset button text after a short delay to show the refresh completed
+                Timer resetTimer = new Timer(500, resetEvent -> {
+                    refreshButton.setText("🔄 Refresh Data");
+                    refreshButton.setEnabled(true);
+                });
+                resetTimer.setRepeats(false);
+                resetTimer.start();
+            });
+        });
+        refreshPanel.add(refreshButton);
+        rightPanel.add(refreshPanel);
         
         // Create scrollable content for personal details
         JPanel personalDetailsContent = new JPanel();
@@ -3806,6 +3919,148 @@ public class ISLUStudentPortal extends JFrame {
         return data.toArray(new Object[data.size()][4]);
     }
     
+    /**
+     * Validates password requirements
+     * @param password The password to validate
+     * @return null if valid, error message if invalid
+     */
+    private String validatePasswordRequirements(String password) {
+        if (password == null || password.length() < 8) {
+            return "Password must be at least 8 characters long.";
+        }
+        
+        boolean hasUppercase = false;
+        boolean hasLowercase = false;
+        boolean hasDigit = false;
+        boolean hasSpecialChar = false;
+        
+        String specialChars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+        
+        for (char c : password.toCharArray()) {
+            if (Character.isUpperCase(c)) {
+                hasUppercase = true;
+            } else if (Character.isLowerCase(c)) {
+                hasLowercase = true;
+            } else if (Character.isDigit(c)) {
+                hasDigit = true;
+            } else if (specialChars.contains(String.valueOf(c))) {
+                hasSpecialChar = true;
+            }
+        }
+        
+        if (!hasUppercase) {
+            return "Password must contain at least one uppercase letter.";
+        }
+        if (!hasLowercase) {
+            return "Password must contain at least one lowercase letter.";
+        }
+        if (!hasDigit) {
+            return "Password must contain at least one number.";
+        }
+        if (!hasSpecialChar) {
+            return "Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?).";
+        }
+        
+        return null; // Password is valid
+    }
+    
+    /**
+     * Refreshes the UI to reflect current database information
+     */
+    private void refreshUIFromDatabase() {
+        // Refresh personal details if currently shown
+        Component rightComponent = null;
+        JPanel mainContentPanel = (JPanel) contentPanel.getComponent(0);
+        if (mainContentPanel.getComponentCount() > 1) {
+            rightComponent = mainContentPanel.getComponent(1);
+        }
+        
+        // Check which panel is currently active and refresh it
+        if (rightComponent != null) {
+            // Find which button is currently selected by checking their borders
+            Container leftPanel = (Container) mainContentPanel.getComponent(0);
+            for (Component comp : leftPanel.getComponents()) {
+                if (comp instanceof JButton) {
+                    JButton button = (JButton) comp;
+                    if (button.getBorder() instanceof CompoundBorder) {
+                        CompoundBorder border = (CompoundBorder) button.getBorder();
+                        if (border.getOutsideBorder() instanceof LineBorder) {
+                            LineBorder lineBorder = (LineBorder) border.getOutsideBorder();
+                            if (lineBorder.getThickness() == 2) { // Selected button has thick border
+                                String buttonText = button.getText();
+                                switch (buttonText) {
+                                    case "Personal Details":
+                                        showPersonalDetailsInRightPanel();
+                                        break;
+                                    case "Account Info":
+                                        showAccountInfo();
+                                        break;
+                                    // Change Password panel doesn't need refresh as it's always empty
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Starts monitoring the database file for changes
+     */
+    private void startDatabaseMonitoring() {
+        // Get initial database modification time
+        updateDatabaseModificationTime();
+        
+        // Create timer to check for database changes every 5 seconds
+        databaseCheckTimer = new Timer(5000, e -> checkDatabaseChanges());
+        databaseCheckTimer.start();
+    }
+    
+    /**
+     * Stops database monitoring
+     */
+    private void stopDatabaseMonitoring() {
+        if (databaseCheckTimer != null) {
+            databaseCheckTimer.stop();
+            databaseCheckTimer = null;
+        }
+    }
+    
+    /**
+     * Updates the stored database modification time
+     */
+    private void updateDatabaseModificationTime() {
+        try {
+            File dbFile = new File("Database.txt");
+            if (dbFile.exists()) {
+                lastDatabaseModified = dbFile.lastModified();
+            }
+        } catch (Exception e) {
+            System.err.println("Error checking database modification time: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Checks if the database has been modified and refreshes UI if needed
+     */
+    private void checkDatabaseChanges() {
+        try {
+            File dbFile = new File("Database.txt");
+            if (dbFile.exists()) {
+                long currentModified = dbFile.lastModified();
+                if (currentModified > lastDatabaseModified) {
+                    lastDatabaseModified = currentModified;
+                    // Database has been modified, refresh the UI
+                    SwingUtilities.invokeLater(() -> refreshUIFromDatabase());
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error checking database changes: " + e.getMessage());
+        }
+    }
+
     /**
      * Parses profile data string from Database.txt into ProfileData object
      */
