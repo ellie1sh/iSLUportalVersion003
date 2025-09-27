@@ -844,7 +844,7 @@ public class ISLUStudentPortal extends JFrame {
     private JPanel createClassScheduleTable() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.WHITE);
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 5, 15));
         
         // Get course data
         List<CourseScheduleItem> courses = getSampleCourses();
@@ -862,7 +862,7 @@ public class ISLUStudentPortal extends JFrame {
             data[i][2] = course.courseDescription;
             data[i][3] = course.units;
             data[i][4] = formatTime(course.startTime) + " - " + formatTime(course.endTime);
-            data[i][5] = course.days;
+            data[i][5] = expandDaysLabel(course.days);
             data[i][6] = course.room;
             data[i][7] = getModuleFromRoom(course.room); // Extract module from room
         }
@@ -891,7 +891,7 @@ public class ISLUStudentPortal extends JFrame {
         table.getColumnModel().getColumn(2).setPreferredWidth(300); // Course Description
         table.getColumnModel().getColumn(3).setPreferredWidth(50);  // Units
         table.getColumnModel().getColumn(4).setPreferredWidth(120); // Schedule
-        table.getColumnModel().getColumn(5).setPreferredWidth(80);  // Days
+        table.getColumnModel().getColumn(5).setPreferredWidth(220);  // Days
         table.getColumnModel().getColumn(6).setPreferredWidth(80);  // Room
         table.getColumnModel().getColumn(7).setPreferredWidth(80);  // Module
         
@@ -1065,6 +1065,34 @@ public class ISLUStudentPortal extends JFrame {
         int displayHour = hour % 12;
         if (displayHour == 0) displayHour = 12;
         return String.format("%d:%02d %s", displayHour, minute, ampm);
+    }
+
+    private static String expandDaysLabel(String days) {
+        if (days == null || days.trim().isEmpty()) return "";
+        String str = days.trim().toUpperCase();
+        String normalized = str.replace("TH", " ");
+
+        java.util.List<String> names = new java.util.ArrayList<>();
+        if (normalized.contains("M")) names.add("Monday");
+        if (normalized.contains("T")) names.add("Tuesday");
+        if (normalized.contains("W")) names.add("Wednesday");
+        if (str.contains("TH")) names.add("Thursday");
+        if (normalized.contains("F")) names.add("Friday");
+        if (normalized.contains("S")) names.add("Saturday");
+
+        if (names.isEmpty()) return "";
+        if (names.size() == 1) return names.get(0);
+        if (names.size() == 2) return names.get(0) + " and " + names.get(1);
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < names.size(); i++) {
+            if (i == names.size() - 1) {
+                sb.append("and ").append(names.get(i));
+            } else {
+                sb.append(names.get(i)).append(", ");
+            }
+        }
+        return sb.toString();
     }
 
     // Lightweight course model aligned with provided fields
